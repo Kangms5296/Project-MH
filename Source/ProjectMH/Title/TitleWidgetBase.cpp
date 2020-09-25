@@ -9,13 +9,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "../MHGameInstance.h"
 
-#include "Serialization/JsonWriter.h"
-#include "Templates/SharedPointer.h"
+#include "../Battle/Character/Player/UserDataManager.h"
+#include "../Battle/Character/Player/UserData.h"
 
 void UTitleWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
-
 
 	// === In Log-In Panel
 	{
@@ -76,6 +75,9 @@ void UTitleWidgetBase::NativeConstruct()
 		}
 	}
 
+	UUserDataManager::GetInstance()->SetFilePath("C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\UserData.txt");
+	UUserDataManager::GetInstance()->LoadUserDatasFromFile();
+
 	ShowLogInPanel();
 }
 
@@ -84,10 +86,14 @@ void UTitleWidgetBase::OnClickLogInButton()
 	// User 정보 확인
 	FString ID = T_UserID->GetText().ToString();
 	FString PW = T_Password->GetText().ToString();
-	if (ExistID(ID) && ValidUserInfo(ID, PW))
+	if (ValidUserInfo(ID, PW))
 	{
-		LoadUserInfo(ID);
+		UUserData* Data = UUserDataManager::GetInstance()->GetUser(ID);
+		
+		// GI에 접속 User 정보 저장
+		SaveToGI(ID, Data->UserNN);
 
+		// 네트워크 설정 패널 표시
 		ShowServerPanel();
 	}
 }
@@ -109,10 +115,12 @@ void UTitleWidgetBase::OnClickCreateButton()
 
 	// 기존의 데이터와 비교
 	FString ID = T_NewUserID->GetText().ToString();
+	FString PW = T_NewPassword->GetText().ToString();
+	FString NN = T_NewNICKNAME->GetText().ToString();
 	if (!ExistID(ID))
 	{
 		// 새로운 User 정보를 추가
-		SaveUserInfo();
+		AddUserInfo(ID, PW, NN);
 
 		// Log-IN 화면으로 이동
 		ShowLogInPanel();
@@ -125,6 +133,10 @@ void UTitleWidgetBase::OnClickStartServer()
 	ATitlePC* PC = GetOwningPlayer<ATitlePC>();
 	if (PC)
 	{
+		// 캐싱 유저 정보를 저장
+		UUserDataManager::GetInstance()->SaveUserDatasToFile();
+
+		// 서버 생성
 		PC->StartServer();
 	}
 }
@@ -186,95 +198,51 @@ void  UTitleWidgetBase::ShowServerPanel()
 
 bool UTitleWidgetBase::ExistID(FString UserID)
 {
-	FString FilePath = "C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\" + UserID + ".txt";
-
-	if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*FilePath))
+	if (UUserDataManager::GetInstance()->ExistUser(UserID))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Good"));
 		return true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Bad"));
 		return false;
 	}
 }
 
 bool UTitleWidgetBase::ValidUserInfo(FString UserID, FString UserPW)
 {
-	FString Jsonstr;
-
-	// Load Json
-	FString FilePath = "C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\" + UserID + ".txt";
-	FFileHelper::LoadFileToString(Jsonstr, *FilePath);
-
-	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(Jsonstr);
-
-	TSharedPtr<FJsonObject> JsonObj = MakeShareable(new FJsonObject());
-
-	if (FJsonSerializer::Deserialize(Reader, JsonObj))
+	UUserData* Data = UUserDataManager::GetInstance()->GetUser(UserID);
+	if (Data && Data->UserPW == UserPW)
 	{
-		FString PW = JsonObj->GetStringField(TEXT("UserPW"));
-
-		if (PW == UserPW)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return true;
 	}
-
-	return false;
-}
-
-void UTitleWidgetBase::SaveUserInfo()
-{
-	// Set JSON
-	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
-	JsonObject->SetStringField("UserID", T_NewUserID->GetText().ToString());
-	JsonObject->SetStringField("UserPW", T_NewPassword->GetText().ToString());
-	JsonObject->SetStringField("UserNN", T_NewNICKNAME->GetText().ToString());
-
-	// Serialize(JSON to String)
-	FString OutputString;
-	TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-	TSharedRef<TJsonWriter<TCHAR, TPrettyJsonPrintPolicy< TCHAR >>> jsonObj = TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy< TCHAR >>::Create(&OutputString);
-
-	// Save To File
-	FString FilePath = "C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\" + T_NewUserID->GetText().ToString() + ".txt";
-	FFileHelper::SaveStringToFile(*OutputString, *FilePath, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
-}
-
-void UTitleWidgetBase::LoadUserInfo(FString UserID)
-{
-	FString Jsonstr;
-
-	// Load Json
-	FString FilePath = "C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\" + UserID + ".txt";
-	FFileHelper::LoadFileToString(Jsonstr, *FilePath);
-
-	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(Jsonstr);
-	
-	TSharedPtr<FJsonObject> JsonObj = MakeShareable(new FJsonObject());
-
-	if (FJsonSerializer::Deserialize(Reader, JsonObj))
+	else
 	{
-		FString userID = JsonObj->GetStringField(TEXT("UserID"));
-		FString userPW = JsonObj->GetStringField(TEXT("UserPW"));
-		FString userNN = JsonObj->GetStringField(TEXT("UserNN"));
-
-		SaveToGI(userNN);
+		return false;
 	}
 }
 
-void UTitleWidgetBase::SaveToGI(FString UserNickName)
+void UTitleWidgetBase::AddUserInfo(FString UserID, FString UserPW, FString UserNN)
+{
+	UUserData* Data = NewObject<UUserData>();
+
+	Data->UserID = UserID;
+	Data->UserPW = UserPW;
+	Data->UserNN = UserNN;
+
+	UUserDataManager::GetInstance()->AddUser(Data);
+}
+
+void UTitleWidgetBase::DeleteUserInfo(FString UserID)
+{
+	UUserDataManager::GetInstance()->DeleteUser(UserID);
+}
+
+void UTitleWidgetBase::SaveToGI(FString UserID, FString UserNN)
 {
 	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (GI)
 	{
-		GI->SetUserNickName(UserNickName);
+		GI->SetUserID(UserID);
+		GI->SetUserNN(UserNN);
 	}
 }

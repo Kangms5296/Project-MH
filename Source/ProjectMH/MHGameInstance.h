@@ -15,12 +15,16 @@ class PROJECTMH_API UMHGameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
-	FString GetUserNickName();
+	FString GetUserNN();
+	FString GetUserID();
 
-	void SetUserNickName(FString NewUserNickName);
-
+	void SetUserNN(FString NewUserNN);
+	void SetUserID(FString NewUserID);
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	FString UserNickName;
+	FString UserNN;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FString UserID;
 };

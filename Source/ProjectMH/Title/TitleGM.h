@@ -14,4 +14,6 @@ class PROJECTMH_API ATitleGM : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	void BeginPlay() override;
 };

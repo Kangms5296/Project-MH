@@ -68,6 +68,7 @@ public:
 	class UButton* B_ConnenctServer;
 	
 
+
 	//UMG Widget과 Control 변수 연결
 	virtual void NativeConstruct() override;
 
@@ -86,10 +87,8 @@ public:
 	UFUNCTION()
 	void OnClickConnectServer();
 
-	void SaveUserInfo();
-	void LoadUserInfo(FString UserID);
-
-	void SaveToGI(FString UserNickName);
+	void AddUserInfo(FString UserID, FString UserPW, FString UserNN);
+	void DeleteUserInfo(FString UserID);
 
 	void ShowLogInPanel();
 	void ShowSignUpPanel();
@@ -98,4 +97,5 @@ public:
 	bool ExistID(FString UserID);
 	bool ValidUserInfo(FString UserID, FString UserPW);
 
+	void SaveToGI(FString UserID, FString UserNN);
 };

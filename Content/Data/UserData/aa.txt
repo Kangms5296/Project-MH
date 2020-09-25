@@ -1,5 +1,0 @@
-{
-	"UserID": "aa",
-	"UserPW": "aa",
-	"UserNN": "aa"
-}

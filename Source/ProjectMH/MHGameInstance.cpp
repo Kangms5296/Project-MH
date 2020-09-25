@@ -3,12 +3,24 @@
 
 #include "MHGameInstance.h"
 
-FString UMHGameInstance::GetUserNickName()
+
+
+FString UMHGameInstance::GetUserNN()
 {
-	return UserNickName;
+	return UserNN;
 }
 
-void UMHGameInstance::SetUserNickName(FString NewUserNickName)
+FString UMHGameInstance::GetUserID()
 {
-	UserNickName = NewUserNickName;
+	return UserID;
+}
+
+void UMHGameInstance::SetUserNN(FString NewUserNN)
+{
+	UserNN = NewUserNN;
+}
+
+void UMHGameInstance::SetUserID(FString NewUserID)
+{
+	UserID = NewUserID;
 }
