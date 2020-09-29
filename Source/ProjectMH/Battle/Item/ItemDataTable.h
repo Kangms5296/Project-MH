@@ -24,23 +24,26 @@ struct PROJECTMH_API FItemDataTable : public FTableRowBase
 	
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		int ItemIndex;
+	int ItemIndex;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		FString ItemName;
+	FString ItemName;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		EItemType ItemType;
+	FString ItemDescription;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		float ItemFloat01;
+	EItemType ItemType;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		int ItemCount;
+	float ItemFloat01;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		TAssetPtr<class UTexture2D> ItemThumnail;
+	int ItemCount;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-		TAssetPtr<class UStaticMesh>ItemMesh;
+	TAssetPtr<class UTexture2D> ItemThumnail;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TAssetPtr<class UStaticMesh>ItemMesh;
 };

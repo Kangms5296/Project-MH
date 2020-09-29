@@ -3,7 +3,9 @@
 
 #include "TestPC.h"
 #include "../Battle/Character/Player/InventoryWidgetBase.h"
-
+#include "../Battle/Character/Player/InventorySlotWidgetBase.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/UniformGridSlot.h"
 void ATestPC::BeginPlay()
 {
 	Super::BeginPlay();
@@ -49,7 +51,12 @@ void ATestPC::ToggleInventory()
 		{
 			InventoryWidgetObject->SetVisibility(ESlateVisibility::Visible);
 			bShowMouseCursor = true;
-			SetInputMode(FInputModeGameAndUI());
+			SetInputMode(FInputModeGameOnly());
+			/*
+			FInputModeGameAndUI inputMode;
+			inputMode.SetHideCursorDuringCapture(false);
+			SetInputMode(inputMode);
+			*/
 		}
 	}
 }
@@ -57,6 +64,7 @@ void ATestPC::ToggleInventory()
 void ATestPC::GetItem1()
 {
 	InventoryWidgetObject->AddItem(1, 2);
+}
 
 void ATestPC::GetItem2()
 {

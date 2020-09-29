@@ -6,34 +6,105 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "Components/TextBlock.h"
+#include "Components/Border.h"
+#include "Kismet/GameplayStatics.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "../../../Test/MyDragDropOperation.h"
 
 void UInventoryWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (WidgetTree)
+	// Slot 생성
+	UGP_SlotManageGrid = Cast<UUniformGridPanel>(GetWidgetFromName(TEXT("UGP_SlotManageGrid")));
+	if (UGP_SlotManageGrid)
 	{
-		TArray<UWidget*> Widgets;
-		WidgetTree->GetAllWidgets(Widgets);
-
-		int Index = 0;
-		for (UWidget* Widget : Widgets)
+		for (int Row = 0; Row < Rows; ++Row)
 		{
-			if (Widget && Widget->IsA(UInventorySlotWidgetBase::StaticClass()))
+			for (int Col = 0; Col < Cols; ++Col)
 			{
-				if (UInventorySlotWidgetBase* InventorySlot = Cast<UInventorySlotWidgetBase>(Widget))
-				{
-					InventorySlot->SlotIndex = Index;
-					InventorySlot->RowIndex = Index / MaxColumnCount;
-					InventorySlot->ColIndex = Index % MaxColumnCount;
-					++Index;
+				// Slot 생성.
+				UInventorySlotWidgetBase* CurSlot = CreateWidget<UInventorySlotWidgetBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0), InventorySlotWidgetClass);
+				CurSlot->SlotIndex = Row * Cols + Col;
+				CurSlot->RowIndex = Row;
+				CurSlot->ColIndex = Col;
+				Slots.Add(CurSlot);
 
-					Slots.Add(InventorySlot);
-				}
+				// Slot 화면에 표시.
+				UUniformGridSlot* GridSlot = UGP_SlotManageGrid->AddChildToUniformGrid(CurSlot, Row, Col);
+				GridSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Fill);
+				GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
+
+				// 저장 데이터 파싱.
+				// ..
 			}
 		}
 	}
+
+	T_Gold = Cast<UTextBlock>(GetWidgetFromName(TEXT("T_Gold")));
+	if (T_Gold)
+	{
+		// 저장 데이터 파싱.
+		FString Temp = "0";
+		T_Gold->SetText(FText::FromString(Temp));
+	}
+
+	B_Header = Cast<UBorder>(GetWidgetFromName(TEXT("B_Header")));
+	if (B_Header)
+	{
+	}
+	
 }
+
+void UInventoryWidgetBase::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (true)
+	{
+		FVector2D DragCurPos;
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetMousePosition(DragCurPos.X, DragCurPos.Y);
+		UE_LOG(LogTemp, Warning, TEXT("%f"), DragCurPos.X);
+
+		int32 ViewPortSizeX;
+		int32 ViewPortSizeY;
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetViewportSize(ViewPortSizeX, ViewPortSizeY);
+		
+
+
+		FVector2D ResultPos = FVector2D(DragCurPos.X, DragCurPos.Y);
+		SetRenderTranslation(ResultPos);
+
+
+	}
+}
+/*
+void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent, UDragDropOperation *& OutOperation)
+{
+	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	if (OutOperation == nullptr)
+	{
+		UMyDragDropOperation* oper = NewObject<UMyDragDropOperation>();
+		OutOperation = oper;
+		oper->DefaultDragVisual = this;
+	}
+}
+
+FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
+{
+	FEventReply reply;
+	reply.NativeReply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+
+	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+	{
+		reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
+	}
+
+	return reply.NativeReply;
+}
+*/
 
 bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 {
