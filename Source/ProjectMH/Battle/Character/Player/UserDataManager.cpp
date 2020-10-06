@@ -8,14 +8,10 @@
 #include "Serialization/JsonWriter.h"
 #include "Templates/SharedPointer.h"
 
-void UUserDataManager::SetFilePath(FString Path)
-{
-	SavePath = Path;
-}
 
-void UUserDataManager::LoadUserDatasFromFile()
+void UUserDataManager::LoadUserDatasFromFile(FString SavedPath)
 {
-	FString OutputString = UJsonHelper::GetInstance()->LoadFromFile(SavePath);
+	FString OutputString = UJsonHelper::GetInstance()->LoadFromFile(SavedPath);
 	auto JsonArr = UJsonHelper::GetInstance()->GetArrayField(OutputString, "Users");
 
 	for (int i = 0; i < JsonArr.Num(); i++)
@@ -27,7 +23,7 @@ void UUserDataManager::LoadUserDatasFromFile()
 	}
 }
 
-void UUserDataManager::SaveUserDatasToFile()
+void UUserDataManager::SaveUserDatasToFile(FString SavePath)
 {
 	// Make JsonObject Array
 	TArray<TSharedPtr<FJsonValue>> JsonArr;

@@ -3,6 +3,8 @@
 
 #include "InventoryWidgetBase.h"
 #include "InventorySlotWidgetBase.h"
+#include "WidgetHeaderBase.h"
+#include "MainWidgetDD.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
@@ -10,7 +12,6 @@
 #include "Components/Border.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "../../../Test/MyDragDropOperation.h"
 
 void UInventoryWidgetBase::NativeConstruct()
 {
@@ -54,34 +55,14 @@ void UInventoryWidgetBase::NativeConstruct()
 	if (B_Header)
 	{
 	}
+
+	InventoryHeader = Cast<UWidgetHeaderBase>(GetWidgetFromName(TEXT("InventoryHeader")));
+	{
+		InventoryHeader->SetOwnerWidget(this);
+	}
 	
 }
-
-void UInventoryWidgetBase::NativeTick(const FGeometry & MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-}
-
-void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent, UDragDropOperation *& OutOperation)
-{
-	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
-
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Drag : Draging Start"));
-
-	if (OutOperation == nullptr)
-	{
-		UMyDragDropOperation* oper = NewObject<UMyDragDropOperation>();
-		OutOperation = oper;
-		oper->DefaultDragVisual = this;
-	}
-}
-
-bool UInventoryWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const FDragDropEvent & InDragDropEvent, UDragDropOperation * InOperation)
-{
-	return false;
-}
-
+/*
 FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
 {
 	FEventReply reply;
@@ -96,6 +77,26 @@ FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometr
 }
 
 
+void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent, UDragDropOperation *& OutOperation)
+{
+	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	UMainWidgetDD* WidgetDD = Cast<UMainWidgetDD>(UWidgetBlueprintLibrary::CreateDragDropOperation(UMainWidgetDD::StaticClass()));
+	if (WidgetDD == nullptr)
+	{
+		return;
+	}
+	WidgetDD->WidgetToDrag = this;
+	WidgetDD->MouseOffset = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+
+	WidgetDD->DefaultDragVisual = this;
+	WidgetDD->Pivot = EDragPivot::MouseDown;
+
+	OutOperation = WidgetDD;
+
+	this->RemoveFromParent();
+}
+*/
 bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 {
 	for (int i = 0; i < Slots.Num(); i++)

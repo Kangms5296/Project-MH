@@ -4,6 +4,7 @@
 #include "TestPC.h"
 #include "../Battle/Character/Player/InventoryWidgetBase.h"
 #include "../Battle/Character/Player/InventorySlotWidgetBase.h"
+#include "../Battle/Character/Player/MainWidgetBase.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 void ATestPC::BeginPlay()
@@ -12,11 +13,10 @@ void ATestPC::BeginPlay()
 
 	if (IsLocalPlayerController())
 	{
-		InventoryWidgetObject = CreateWidget<UInventoryWidgetBase>(this, InventoryWidgetClass);
-		if (InventoryWidgetObject)
+		MainWidgetObject = CreateWidget<UMainWidgetBase>(this, MainWidgetClass);
+		if (MainWidgetObject)
 		{
-			InventoryWidgetObject->AddToViewport();
-			InventoryWidgetObject->SetVisibility(ESlateVisibility::Collapsed);
+			MainWidgetObject->AddToViewport();
 		}
 	}
 }
@@ -34,39 +34,39 @@ void ATestPC::ToggleInventory()
 {
 	if (IsShowInventory)
 	{
-		IsShowInventory = false;
-
-		if (InventoryWidgetObject)
+		if (MainWidgetObject)
 		{
-			InventoryWidgetObject->SetVisibility(ESlateVisibility::Collapsed);
+			IsShowInventory = false;
+
+			MainWidgetObject->HideInventory();
 			bShowMouseCursor = false;
 			SetInputMode(FInputModeGameOnly());
 		}
 	}
 	else
 	{
-		IsShowInventory = true;
-
-		if (InventoryWidgetObject)
+		if (MainWidgetObject)
 		{
-			InventoryWidgetObject->SetVisibility(ESlateVisibility::Visible);
+			IsShowInventory = true;
+
+			MainWidgetObject->ShowInventory();
 			bShowMouseCursor = true;
-			SetInputMode(FInputModeGameOnly());
-			/*
-			FInputModeGameAndUI inputMode;
-			inputMode.SetHideCursorDuringCapture(false);
-			SetInputMode(inputMode);
-			*/
+			SetInputMode(FInputModeGameAndUI());
+
+			int ViewportX;
+			int ViewportY;
+			GetViewportSize(ViewportX, ViewportY);
+			SetMouseLocation(ViewportX * 0.5f, ViewportY * 0.5f);
 		}
 	}
 }
 
 void ATestPC::GetItem1()
 {
-	InventoryWidgetObject->AddItem(1, 2);
+	MainWidgetObject->InventoryObject->AddItem(1, 1);
 }
 
 void ATestPC::GetItem2()
 {
-	InventoryWidgetObject->AddItem(2, 2);
+	MainWidgetObject->InventoryObject->AddItem(2, 1);
 }

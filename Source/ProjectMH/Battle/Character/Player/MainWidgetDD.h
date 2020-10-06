@@ -4,14 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/DragDropOperation.h"
-#include "MyDragDropOperation.generated.h"
+#include "MainWidgetDD.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTMH_API UMyDragDropOperation : public UDragDropOperation
+class PROJECTMH_API UMainWidgetDD : public UDragDropOperation
 {
 	GENERATED_BODY()
 	
+public:
+	UUserWidget* WidgetToDrag;
+	FVector2D MouseOffset;
 };

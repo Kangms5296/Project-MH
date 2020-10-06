@@ -19,10 +19,10 @@ public:
 	virtual void SetupInputComponent() override;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "UI")
-	TSubclassOf<class UInventoryWidgetBase> InventoryWidgetClass;
+	TSubclassOf<class UMainWidgetBase> MainWidgetClass;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
-	class UInventoryWidgetBase* InventoryWidgetObject;
+	class UMainWidgetBase* MainWidgetObject;
 
 	bool IsShowInventory;
 	void ToggleInventory();
