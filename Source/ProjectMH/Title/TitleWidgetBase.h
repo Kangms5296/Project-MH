@@ -65,7 +65,7 @@ public:
 	class UButton* B_StartServer;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Control")
-	class UButton* B_ConnenctServer;
+	class UButton* B_ConnectServer;
 	
 
 
@@ -98,4 +98,7 @@ public:
 	bool ValidUserInfo(FString UserID, FString UserPW);
 
 	void SaveToGI(FString UserID, FString UserNN);
+
+	UPROPERTY()
+	class UUserDataManager* UserDataManager;
 };

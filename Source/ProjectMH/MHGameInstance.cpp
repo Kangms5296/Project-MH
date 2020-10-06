@@ -2,7 +2,7 @@
 
 
 #include "MHGameInstance.h"
-
+#include "Battle/Character/Player/UserDataManager.h"
 
 
 FString UMHGameInstance::GetUserNN()

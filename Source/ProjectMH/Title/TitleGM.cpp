@@ -8,6 +8,5 @@
 
 void ATitleGM::BeginPlay()
 {
-	UUserDataManager::Init();
 	UJsonHelper::Init();
 }

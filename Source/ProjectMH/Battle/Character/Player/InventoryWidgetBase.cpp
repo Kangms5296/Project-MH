@@ -61,28 +61,13 @@ void UInventoryWidgetBase::NativeTick(const FGeometry & MyGeometry, float InDelt
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (true)
-	{
-		FVector2D DragCurPos;
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetMousePosition(DragCurPos.X, DragCurPos.Y);
-		UE_LOG(LogTemp, Warning, TEXT("%f"), DragCurPos.X);
-
-		int32 ViewPortSizeX;
-		int32 ViewPortSizeY;
-		UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetViewportSize(ViewPortSizeX, ViewPortSizeY);
-		
-
-
-		FVector2D ResultPos = FVector2D(DragCurPos.X, DragCurPos.Y);
-		SetRenderTranslation(ResultPos);
-
-
-	}
 }
-/*
+
 void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent, UDragDropOperation *& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Drag : Draging Start"));
 
 	if (OutOperation == nullptr)
 	{
@@ -90,6 +75,11 @@ void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, co
 		OutOperation = oper;
 		oper->DefaultDragVisual = this;
 	}
+}
+
+bool UInventoryWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const FDragDropEvent & InDragDropEvent, UDragDropOperation * InOperation)
+{
+	return false;
 }
 
 FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
@@ -104,7 +94,7 @@ FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometr
 
 	return reply.NativeReply;
 }
-*/
+
 
 bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 {

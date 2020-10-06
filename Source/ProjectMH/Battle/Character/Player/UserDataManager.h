@@ -14,15 +14,13 @@ class PROJECTMH_API UUserDataManager : public UObject
 {
 	GENERATED_BODY()
 
-private:
-	static UUserDataManager* Instance;
 
-	FString SavePath; // 저장 경로
-
-	TArray<class UUserData*> UserDatas; // 로컬에 저장되어 있는 유저들의 데이터 캐싱
 public:
-	static void Init();
-	static UUserDataManager* GetInstance();
+	UPROPERTY()
+	TArray<class UUserData*> UserDatas;  // 저장되어 있는 유저들의 데이터 캐싱
+
+	UPROPERTY()
+	FString SavePath;					// 저장 경로
 
 	void SetFilePath(FString Path);
 

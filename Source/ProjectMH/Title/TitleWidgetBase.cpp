@@ -6,6 +6,7 @@
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "TitlePC.h"
+#include "TitleGS.h"
 #include "Kismet/GameplayStatics.h"
 #include "../MHGameInstance.h"
 
@@ -68,15 +69,16 @@ void UTitleWidgetBase::NativeConstruct()
 			B_StartServer->OnClicked.AddDynamic(this, &UTitleWidgetBase::OnClickStartServer);
 		}
 
-		B_ConnenctServer = Cast<UButton>(GetWidgetFromName(TEXT("B_ConnenctServer")));
-		if (B_ConnenctServer)
+		B_ConnectServer = Cast<UButton>(GetWidgetFromName(TEXT("B_ConnectServer")));
+		if (B_ConnectServer)
 		{
-			B_ConnenctServer->OnClicked.AddDynamic(this, &UTitleWidgetBase::OnClickConnectServer);
+			B_ConnectServer->OnClicked.AddDynamic(this, &UTitleWidgetBase::OnClickConnectServer);
 		}
 	}
 
-	UUserDataManager::GetInstance()->SetFilePath("C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\UserData.txt");
-	UUserDataManager::GetInstance()->LoadUserDatasFromFile();
+	UserDataManager = NewObject<UUserDataManager>(this);
+	UserDataManager->SetFilePath("C:\\Users\\skill\\Desktop\\ProjectMH\\Content\\Data\\UserData\\UserData.txt");
+	UserDataManager->LoadUserDatasFromFile();
 
 	ShowLogInPanel();
 }
@@ -88,13 +90,17 @@ void UTitleWidgetBase::OnClickLogInButton()
 	FString PW = T_Password->GetText().ToString();
 	if (ValidUserInfo(ID, PW))
 	{
-		UUserData* Data = UUserDataManager::GetInstance()->GetUser(ID);
-		
-		// GI에 접속 User 정보 저장
-		SaveToGI(ID, Data->UserNN);
+		ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+		if (GS)
+		{
+			UUserData* Data = UserDataManager->GetUser(ID);
 
-		// 네트워크 설정 패널 표시
-		ShowServerPanel();
+			// GI에 접속 User 정보 저장
+			SaveToGI(ID, Data->UserNN);
+
+			// 네트워크 설정 패널 표시
+			ShowServerPanel();
+		}
 	}
 }
 
@@ -133,11 +139,15 @@ void UTitleWidgetBase::OnClickStartServer()
 	ATitlePC* PC = GetOwningPlayer<ATitlePC>();
 	if (PC)
 	{
-		// 캐싱 유저 정보를 저장
-		UUserDataManager::GetInstance()->SaveUserDatasToFile();
+		ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+		if (GS)
+		{
+			// 캐싱 유저 정보를 저장
+			UserDataManager->SaveUserDatasToFile();
 
-		// 서버 생성
-		PC->StartServer();
+			// 서버 생성
+			PC->StartServer();
+		}
 	}
 }
 
@@ -198,27 +208,39 @@ void  UTitleWidgetBase::ShowServerPanel()
 
 bool UTitleWidgetBase::ExistID(FString UserID)
 {
-	if (UUserDataManager::GetInstance()->ExistUser(UserID))
+	ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS)
 	{
-		return true;
+		if (UserDataManager->ExistUser(UserID))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 bool UTitleWidgetBase::ValidUserInfo(FString UserID, FString UserPW)
 {
-	UUserData* Data = UUserDataManager::GetInstance()->GetUser(UserID);
-	if (Data && Data->UserPW == UserPW)
+	ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS)
 	{
-		return true;
+		UUserData* Data = UserDataManager->GetUser(UserID);
+		if (Data && Data->UserPW == UserPW)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 void UTitleWidgetBase::AddUserInfo(FString UserID, FString UserPW, FString UserNN)
@@ -229,12 +251,20 @@ void UTitleWidgetBase::AddUserInfo(FString UserID, FString UserPW, FString UserN
 	Data->UserPW = UserPW;
 	Data->UserNN = UserNN;
 
-	UUserDataManager::GetInstance()->AddUser(Data);
+	ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS)
+	{
+		UserDataManager->AddUser(Data);
+	}
 }
 
 void UTitleWidgetBase::DeleteUserInfo(FString UserID)
 {
-	UUserDataManager::GetInstance()->DeleteUser(UserID);
+	ATitleGS* GS = Cast<ATitleGS>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GS)
+	{
+		UserDataManager->DeleteUser(UserID);
+	}
 }
 
 void UTitleWidgetBase::SaveToGI(FString UserID, FString UserNN)

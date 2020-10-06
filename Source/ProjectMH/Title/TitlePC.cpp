@@ -11,11 +11,14 @@ void ATitlePC::BeginPlay()
 {
 	if (TitleWidgetClass)
 	{
-		TitleWidgetObject = CreateWidget<UTitleWidgetBase>(this, TitleWidgetClass);
-		TitleWidgetObject->AddToViewport();
+		if (IsLocalPlayerController())
+		{
+			TitleWidgetObject = CreateWidget<UTitleWidgetBase>(this, TitleWidgetClass);
+			TitleWidgetObject->AddToViewport();
 
-		bShowMouseCursor = true;
-		SetInputMode(FInputModeUIOnly());
+			bShowMouseCursor = true;
+			SetInputMode(FInputModeUIOnly());
+		}
 	}
 }
 

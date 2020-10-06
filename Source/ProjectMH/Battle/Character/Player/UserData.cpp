@@ -9,6 +9,7 @@
 TSharedPtr<FJsonObject> UUserData::DataToJson()
 {
 	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+
 	JsonObject->SetStringField("UserID", UserID);
 	JsonObject->SetStringField("UserPW", UserPW);
 	JsonObject->SetStringField("UserNN", UserNN);
