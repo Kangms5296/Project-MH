@@ -5,6 +5,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "TitleWidgetBase.h"
+#include "../JsonHelper.h"
 #include "Kismet/GameplayStatics.h"
 
 void ATitlePC::BeginPlay()
@@ -18,6 +19,8 @@ void ATitlePC::BeginPlay()
 
 			bShowMouseCursor = true;
 			SetInputMode(FInputModeUIOnly());
+
+			JsonHelper = NewObject<UJsonHelper>(this);
 		}
 	}
 }

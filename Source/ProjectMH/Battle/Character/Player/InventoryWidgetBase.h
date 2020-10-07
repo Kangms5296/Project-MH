@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../../Item/ItemDataTable.h"
 #include "InventoryWidgetBase.generated.h"
 
 /**
@@ -19,14 +20,10 @@ private:
 
 public:
 	virtual void NativeConstruct() override;
-	/*
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
-	*/
+
 	class UUniformGridPanel* UGP_SlotManageGrid;
-	class UTextBlock* T_Gold;
-	class UBorder* B_Header;
 	class UWidgetHeaderBase* InventoryHeader;
+	class UTextBlock* T_Gold;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Slot")
 	TSubclassOf<class UInventorySlotWidgetBase> InventorySlotWidgetClass;
@@ -38,23 +35,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Slot")
 	int Cols;
 
-	bool AddItem(int ItemIndex, int Count); // 인벤토리 내 Index에 해당하는 아이템을 Count 만큼 추가. 만약, 기존에 없는 아이템이면 새로운 Slot에 아이템을 추가.
-	bool SubItem(int ItemIndex, int Count); // 인벤토리 내 Index에 해당하는 아이템을 Count 만큼 제거. 만약, 기존에 없는 아이템이면 False 반환.
+	bool AddItem(FItemDataTable ItemData, int Count); // 인벤토리 내 Index에 해당하는 아이템을 Count 만큼 추가. 만약, 기존에 없는 아이템이면 새로운 Slot에 아이템을 추가.
+	bool SubItem(FItemDataTable ItemData, int Count); // 인벤토리 내 Index에 해당하는 아이템을 Count 만큼 제거. 만약, 기존에 없는 아이템이면 False 반환.
 
-	bool AddItemAtSlot(int SlotIndex, int Count); // RowIndex, ColIndex 위치의 아이템 Count 만큼 추가.
-	bool SubItemAtSlot(int SlotIndex, int Count); // RowIndex, ColIndex 위치의 아이템 Count 만큼 제거.
+	bool AddItemAtSlot(int Row, int Col, int Count); // RowIndex, ColIndex 위치의 아이템 Count 만큼 추가.
+	bool SubItemAtSlot(int Row, int Col, int Count); // RowIndex, ColIndex 위치의 아이템 Count 만큼 제거.
 
 	void ClearInventory();
 
-	bool SetSlot(int SlotIndex, int ItemIndex, int Count);
-	void ResetSlot(int SlotIndex);
+	bool SetSlot(int Row, int Col, FItemDataTable ItemData, int Count);
+	void ResetSlot(int Row, int Col);
 
-	int GetEmptySlotIndex(); // 인벤토리 내 미사용 Slot Index 반환
+	bool GetEmptySlotIndex(int& EmptyRow, int& EmptyCol); // 인벤토리 내 미사용 Slot Index 반환
 
-	bool IsHeaderPressed;
-	FVector2D DragStartPos;
-	FVector2D InventoryPos;
-
-	UUserWidget* OwnerWidget;
-	void SetOwnerWidget(UUserWidget* NewOwnerWidget);
+	int GetSlotIndex(int Row, int Col);
 };

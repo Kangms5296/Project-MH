@@ -1,0 +1,21 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/DragDropOperation.h"
+#include "SlotWidgetDD.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class PROJECTMH_API USlotWidgetDD : public UDragDropOperation
+{
+	GENERATED_BODY()
+	
+public:
+	UUserWidget* BaseSlot;
+
+	UUserWidget* InstantSlot;
+};

@@ -28,4 +28,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ConnectServer(FString ServerIP);
+
+	UPROPERTY()
+	class UJsonHelper* JsonHelper;
 };

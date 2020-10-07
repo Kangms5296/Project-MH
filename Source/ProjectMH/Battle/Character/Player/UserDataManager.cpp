@@ -2,46 +2,56 @@
 
 
 #include "UserDataManager.h"
+#include "../../../Title/TitlePC.h"
 #include "../../../JsonHelper.h"
 #include "UserData.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "Serialization/JsonWriter.h"
 #include "Templates/SharedPointer.h"
 
 
 void UUserDataManager::LoadUserDatasFromFile(FString SavedPath)
 {
-	FString OutputString = UJsonHelper::GetInstance()->LoadFromFile(SavedPath);
-	auto JsonArr = UJsonHelper::GetInstance()->GetArrayField(OutputString, "Users");
-
-	for (int i = 0; i < JsonArr.Num(); i++)
+	ATitlePC* PC = Cast<ATitlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC)
 	{
-		UUserData* Data = NewObject<UUserData>();
-		Data->JsonToData(JsonArr[i]->AsObject());
+		FString OutputString = PC->JsonHelper->LoadFromFile(SavedPath);
+		auto JsonArr = PC->JsonHelper->GetArrayField(OutputString, "Users");
 
-		UserDatas.Add(Data);
+		for (int i = 0; i < JsonArr.Num(); i++)
+		{
+			UUserData* Data = NewObject<UUserData>();
+			Data->JsonToData(JsonArr[i]->AsObject());
+
+			UserDatas.Add(Data);
+		}
 	}
 }
 
 void UUserDataManager::SaveUserDatasToFile(FString SavePath)
 {
-	// Make JsonObject Array
-	TArray<TSharedPtr<FJsonValue>> JsonArr;
-	for (int i = 0; i < UserDatas.Num(); i++)
+	ATitlePC* PC = Cast<ATitlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC)
 	{
-		auto UserData = UserDatas[i]->DataToJson();
-		TSharedRef< FJsonValueObject > JsonValue = MakeShareable(new FJsonValueObject(UserData));
+		// Make JsonObject Array
+		TArray<TSharedPtr<FJsonValue>> JsonArr;
+		for (int i = 0; i < UserDatas.Num(); i++)
+		{
+			auto UserData = UserDatas[i]->DataToJson();
+			TSharedRef< FJsonValueObject > JsonValue = MakeShareable(new FJsonValueObject(UserData));
 
-		JsonArr.Add(JsonValue);
+			JsonArr.Add(JsonValue);
+		}
+
+		// JsonArray To String
+		TSharedPtr<class FJsonObject> JsonStr;
+		PC->JsonHelper->StartMake(JsonStr);
+		PC->JsonHelper->AddArrayField(JsonStr, "Users", JsonArr);
+		FString OutputString = PC->JsonHelper->EndMake(JsonStr);
+
+		// Save File
+		PC->JsonHelper->SaveToFile(OutputString, SavePath);
 	}
-
-	// JsonArray To String
-	UJsonHelper::GetInstance()->StartMake();
-	UJsonHelper::GetInstance()->AddArrayField("Users", JsonArr);
-	FString OutputString = UJsonHelper::GetInstance()->EndMake();
-
-	// Save File
-	UJsonHelper::GetInstance()->SaveToFile(OutputString, SavePath);
 }
 
 void UUserDataManager::AddUser(UUserData * NewData)

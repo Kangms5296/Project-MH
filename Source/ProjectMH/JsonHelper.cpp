@@ -6,20 +6,6 @@
 #include "Serialization/JsonWriter.h"
 #include "Templates/SharedPointer.h"
 
-
-
-UJsonHelper* UJsonHelper::Instance;
-
-void UJsonHelper::Init()
-{
-	Instance = NewObject<UJsonHelper>();
-}
-
-UJsonHelper * UJsonHelper::GetInstance()
-{
-	return Instance;
-}
-
 void UJsonHelper::SaveToFile(FString Json, FString Path)
 {
 	FFileHelper::SaveStringToFile(*Json, *Path);
@@ -38,22 +24,22 @@ FString UJsonHelper::LoadFromFile(FString Path)
 	return Jsonstr;
 }
 
-void UJsonHelper::StartMake()
+void UJsonHelper::StartMake(TSharedPtr<FJsonObject>& JsonStr)
 {
-	JsonStr = MakeShareable(new FJsonObject);
+	JsonStr = MakeShareable(new FJsonObject());
 }
 
-void UJsonHelper::AddStringField(FString Key, FString Value)
+void UJsonHelper::AddStringField(TSharedPtr<FJsonObject>& JsonStr, FString Key, FString Value)
 {
 	JsonStr->SetStringField(Key, Value);
 }
 
-void UJsonHelper::AddArrayField(FString Key, TArray<TSharedPtr<FJsonValue>> Value)
+void UJsonHelper::AddArrayField(TSharedPtr<FJsonObject>& JsonStr, FString Key, TArray<TSharedPtr<FJsonValue>> Value)
 {
 	JsonStr->SetArrayField(Key, Value);
 }
 
-FString UJsonHelper::EndMake()
+FString UJsonHelper::EndMake(TSharedPtr<FJsonObject>& JsonStr)
 {
 	FString OutputString;
 	TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);

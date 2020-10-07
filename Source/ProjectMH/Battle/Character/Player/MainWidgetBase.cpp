@@ -14,8 +14,6 @@ void UMainWidgetBase::NativeConstruct()
 	InventoryObject = Cast<UInventoryWidgetBase>(GetWidgetFromName(TEXT("InventoryWidget")));
 	if (InventoryObject)
 	{
-		InventoryObject->SetOwnerWidget(this);
-
 		HideInventory();
 	}
 
@@ -81,6 +79,6 @@ void UMainWidgetBase::HideTooltip()
 {
 	if (InventoryTooltipObject)
 	{
-		InventoryTooltipObject->RemoveFromParent();
+		InventoryTooltipObject->RemoveFromViewport();
 	}
 }

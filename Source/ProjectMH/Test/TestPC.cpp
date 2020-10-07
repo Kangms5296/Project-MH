@@ -51,7 +51,11 @@ void ATestPC::ToggleInventory()
 
 			MainWidgetObject->ShowInventory();
 			bShowMouseCursor = true;
-			SetInputMode(FInputModeGameAndUI());
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetHideCursorDuringCapture(false);
+			SetInputMode(InputMode);
+
 
 			int ViewportX;
 			int ViewportY;
@@ -63,16 +67,21 @@ void ATestPC::ToggleInventory()
 
 void ATestPC::GetItem1()
 {
-	MainWidgetObject->InventoryObject->AddItem(1, 1);
+	FItemDataTable Temp = *ItemDataTable->FindRow<FItemDataTable>("10", TEXT("ItemIndex"));
+	MainWidgetObject->InventoryObject->AddItem(Temp, 1);
 }
 
 void ATestPC::GetItem2()
 {
-	MainWidgetObject->InventoryObject->AddItem(2, 1);
+	FItemDataTable Temp = *ItemDataTable->FindRow<FItemDataTable>("20", TEXT("ItemIndex"));
+	MainWidgetObject->InventoryObject->AddItem(Temp, 2);
 }
 
 void ATestPC::ShowTooltip(FString ItemName, FString ItemDesc)
 {
+	if (IsShowTooltip)
+		return;
+
 	if (MainWidgetObject)
 	{
 		FVector2D MousePos;
@@ -82,13 +91,20 @@ void ATestPC::ShowTooltip(FString ItemName, FString ItemDesc)
 		GetViewportSize(ViewportSiz.X, ViewportSiz.Y);
 
 		MainWidgetObject->ShowTooltip(ItemName, ItemDesc, MousePos, ViewportSiz);
+
+		IsShowTooltip = true;
 	}
 }
 
 void ATestPC::HideTooltip()
 {
+	if (!IsShowTooltip)
+		return;
+
 	if (MainWidgetObject)
 	{
 		MainWidgetObject->HideTooltip();
+
+		IsShowTooltip = false;
 	}
 }

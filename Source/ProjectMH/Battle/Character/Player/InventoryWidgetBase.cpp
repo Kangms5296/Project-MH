@@ -27,10 +27,8 @@ void UInventoryWidgetBase::NativeConstruct()
 			{
 				// Slot 생성.
 				UInventorySlotWidgetBase* CurSlot = CreateWidget<UInventorySlotWidgetBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0), InventorySlotWidgetClass);
-				CurSlot->SlotIndex = Row * Cols + Col;
 				CurSlot->RowIndex = Row;
 				CurSlot->ColIndex = Col;
-				CurSlot->SetOwnerWidget(this);
 				Slots.Add(CurSlot);
 
 				// Slot 화면에 표시.
@@ -44,6 +42,11 @@ void UInventoryWidgetBase::NativeConstruct()
 		}
 	}
 
+	InventoryHeader = Cast<UWidgetHeaderBase>(GetWidgetFromName(TEXT("InventoryHeader")));
+	{
+		InventoryHeader->SetOwnerWidget(this);
+	}
+
 	T_Gold = Cast<UTextBlock>(GetWidgetFromName(TEXT("T_Gold")));
 	if (T_Gold)
 	{
@@ -51,24 +54,13 @@ void UInventoryWidgetBase::NativeConstruct()
 		FString Temp = "0";
 		T_Gold->SetText(FText::FromString(Temp));
 	}
-
-	B_Header = Cast<UBorder>(GetWidgetFromName(TEXT("B_Header")));
-	if (B_Header)
-	{
-	}
-
-	InventoryHeader = Cast<UWidgetHeaderBase>(GetWidgetFromName(TEXT("InventoryHeader")));
-	{
-		InventoryHeader->SetOwnerWidget(this);
-	}
-	
 }
 
-bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
+bool UInventoryWidgetBase::AddItem(FItemDataTable ItemData, int Count)
 {
 	for (int i = 0; i < Slots.Num(); i++)
 	{
-		if (Slots[i]->IsUsing && Slots[i]->ItemIndex == ItemIndex)
+		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex)
 		{
 			bool Result = Slots[i]->SlotAdd(Count);
 			if (Result)
@@ -79,10 +71,11 @@ bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 		}
 	}
 
-	int SlotIndex = GetEmptySlotIndex();
-	if (SlotIndex != -1)
+	int EmptyRow;
+	int EmptyCol;
+	if (GetEmptySlotIndex(EmptyRow, EmptyCol))
 	{
-		bool Result = AddItemAtSlot(SlotIndex, Count);
+		bool Result = SetSlot(EmptyRow, EmptyCol, ItemData, Count);
 		if (Result)
 		{
 			// 새로운 슬롯에 성공적으로 아이템 수만큼 추가
@@ -94,11 +87,11 @@ bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 	return false;
 }
 
-bool UInventoryWidgetBase::SubItem(int ItemIndex, int Count)
+bool UInventoryWidgetBase::SubItem(FItemDataTable ItemData, int Count)
 {
 	for (int i = 0; i < Slots.Num(); i++)
 	{
-		if (Slots[i]->IsUsing && Slots[i]->ItemIndex == ItemIndex)
+		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex)
 		{
 			bool Result = Slots[i]->SlotSub(Count);
 			if (Result)
@@ -113,16 +106,16 @@ bool UInventoryWidgetBase::SubItem(int ItemIndex, int Count)
 	return false;
 }
 
-bool UInventoryWidgetBase::AddItemAtSlot(int SlotIndex, int Count)
+bool UInventoryWidgetBase::AddItemAtSlot(int Row, int Col, int Count)
 {
-	bool Result = Slots[SlotIndex]->SlotAdd(Count);
-	
+	bool Result = Slots[GetSlotIndex(Row, Col)]->SlotAdd(Count);
+
 	return Result;
 }
 
-bool UInventoryWidgetBase::SubItemAtSlot(int SlotIndex, int Count)
+bool UInventoryWidgetBase::SubItemAtSlot(int Row, int Col, int Count)
 {
-	bool Result = Slots[SlotIndex]->SlotSub(Count);
+	bool Result = Slots[GetSlotIndex(Row, Col)]->SlotSub(Count);
 
 	return Result;
 }
@@ -135,32 +128,34 @@ void UInventoryWidgetBase::ClearInventory()
 	}
 }
 
-bool UInventoryWidgetBase::SetSlot(int SlotIndex, int ItemIndex, int Count)
+bool UInventoryWidgetBase::SetSlot(int Row, int Col, FItemDataTable ItemData, int Count)
 {
-	bool Result = Slots[SlotIndex]->SlotSet(ItemIndex, Count);
+	bool Result = Slots[GetSlotIndex(Row, Col)]->SlotSet(ItemData, Count);
 
 	return Result;
 }
 
-void UInventoryWidgetBase::ResetSlot(int SlotIndex)
+void UInventoryWidgetBase::ResetSlot(int Row, int Col)
 {
-	Slots[SlotIndex]->SlotReset();
+	Slots[GetSlotIndex(Row, Col)]->SlotReset();
 }
 
-int UInventoryWidgetBase::GetEmptySlotIndex()
+bool UInventoryWidgetBase::GetEmptySlotIndex(int& EmptyRow, int& EmptyCol)
 {
 	for (UInventorySlotWidgetBase* MySlot : Slots)
 	{
 		if (false == MySlot->IsUsing)
 		{
-			return MySlot->SlotIndex;
+			EmptyRow = MySlot->RowIndex;
+			EmptyCol = MySlot->ColIndex;
+			return true;
 		}
 	}
 
-	return -1;
+	return false;
 }
 
-void UInventoryWidgetBase::SetOwnerWidget(UUserWidget * NewOwnerWidget)
+int UInventoryWidgetBase::GetSlotIndex(int Row, int Col)
 {
-	OwnerWidget = NewOwnerWidget;
+	return Row * Cols + Col;
 }
