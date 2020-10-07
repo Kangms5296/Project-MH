@@ -2,8 +2,12 @@
 
 
 #include "InventorySlotWidgetBase.h"
+#include "MainWidgetBase.h"
+#include "InventoryWidgetBase.h"
+#include "../../../Test/TestPC.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 void UInventorySlotWidgetBase::NativeConstruct()
 {
@@ -16,6 +20,32 @@ void UInventorySlotWidgetBase::NativeConstruct()
 		I_ItemThumnail->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	T_ItemCount = Cast<UTextBlock>(GetWidgetFromName(TEXT("ItemCount")));
+}
+
+void UInventorySlotWidgetBase::NativeOnMouseEnter(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
+{
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+
+	ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC)
+	{
+		PC->ShowTooltip("", "");
+	}
+}
+
+void UInventorySlotWidgetBase::NativeOnMouseLeave(const FPointerEvent & InMouseEvent)
+{
+	Super::NativeOnMouseLeave(InMouseEvent);
+
+	UInventoryWidgetBase* Inventory = Cast<UInventoryWidgetBase>(OwnerWidget);
+	if (Inventory)
+	{
+		UMainWidgetBase* MainWidget = Cast<UMainWidgetBase>(Inventory->OwnerWidget);
+		if (MainWidget)
+		{
+			MainWidget->HideTooltip();
+		}
+	}
 }
 
 bool UInventorySlotWidgetBase::SlotSet(int NewIndex, int NewCount)
@@ -57,4 +87,9 @@ bool UInventorySlotWidgetBase::SlotSub(int SubCount)
 	ItemCount -= SubCount;
 
 	return true;
+}
+
+void UInventorySlotWidgetBase::SetOwnerWidget(UUserWidget * NewOwnerWidget)
+{
+	OwnerWidget = NewOwnerWidget;
 }

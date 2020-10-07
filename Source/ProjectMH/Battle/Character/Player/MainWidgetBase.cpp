@@ -4,6 +4,7 @@
 #include "MainWidgetBase.h"
 #include "InventoryWidgetBase.h"
 #include "InventorySlotWidgetBase.h"
+#include "InventorySlotTooltipWidgetBase.h"
 #include "MainWidgetDD.h"
 
 void UMainWidgetBase::NativeConstruct()
@@ -13,7 +14,15 @@ void UMainWidgetBase::NativeConstruct()
 	InventoryObject = Cast<UInventoryWidgetBase>(GetWidgetFromName(TEXT("InventoryWidget")));
 	if (InventoryObject)
 	{
+		InventoryObject->SetOwnerWidget(this);
+
 		HideInventory();
+	}
+
+	InventoryTooltipObject = Cast<UInventorySlotTooltipWidgetBase>(GetWidgetFromName(TEXT("InventoryTooltipWidget")));
+	if (InventoryTooltipObject)
+	{
+		HideTooltip();
 	}
 }
 
@@ -48,5 +57,30 @@ void UMainWidgetBase::HideInventory()
 	if (InventoryObject)
 	{
 		InventoryObject->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainWidgetBase::ShowTooltip(FString NewItemName, FString NewItemDesc, FVector2D MousePos, FIntPoint ViewportSize)
+{
+	if (InventoryTooltipObject)
+	{
+		InventoryTooltipObject->SetTooltipInfo(NewItemName, NewItemDesc);
+
+		FVector2D OffsetPos;
+		OffsetPos.X = MousePos.X / ViewportSize.X;
+		OffsetPos.Y = MousePos.Y / ViewportSize.Y;
+		InventoryTooltipObject->SetTooltipOffset(OffsetPos);
+
+		InventoryTooltipObject->SetTooltipPos(MousePos);
+
+		InventoryTooltipObject->AddToViewport();
+	}
+}
+
+void UMainWidgetBase::HideTooltip()
+{
+	if (InventoryTooltipObject)
+	{
+		InventoryTooltipObject->RemoveFromParent();
 	}
 }

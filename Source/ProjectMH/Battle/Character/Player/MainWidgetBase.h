@@ -18,9 +18,16 @@ public:
 	virtual void NativeConstruct() override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
+	UPROPERTY()
+	class UInventoryWidgetBase* InventoryObject;
+
 	void ShowInventory();
 	void HideInventory();
 
+
 	UPROPERTY()
-	class UInventoryWidgetBase* InventoryObject;
+	class UInventorySlotTooltipWidgetBase* InventoryTooltipObject;
+
+	void ShowTooltip(FString NewItemName, FString NewItemDesc, FVector2D MousePos, FIntPoint ViewportSize);
+	void HideTooltip();
 };

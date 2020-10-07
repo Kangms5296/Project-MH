@@ -70,3 +70,25 @@ void ATestPC::GetItem2()
 {
 	MainWidgetObject->InventoryObject->AddItem(2, 1);
 }
+
+void ATestPC::ShowTooltip(FString ItemName, FString ItemDesc)
+{
+	if (MainWidgetObject)
+	{
+		FVector2D MousePos;
+		GetMousePosition(MousePos.X, MousePos.Y);
+
+		FIntPoint ViewportSiz;
+		GetViewportSize(ViewportSiz.X, ViewportSiz.Y);
+
+		MainWidgetObject->ShowTooltip(ItemName, ItemDesc, MousePos, ViewportSiz);
+	}
+}
+
+void ATestPC::HideTooltip()
+{
+	if (MainWidgetObject)
+	{
+		MainWidgetObject->HideTooltip();
+	}
+}

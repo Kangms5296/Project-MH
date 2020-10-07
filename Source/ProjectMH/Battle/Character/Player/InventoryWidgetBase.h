@@ -54,4 +54,7 @@ public:
 	bool IsHeaderPressed;
 	FVector2D DragStartPos;
 	FVector2D InventoryPos;
+
+	UUserWidget* OwnerWidget;
+	void SetOwnerWidget(UUserWidget* NewOwnerWidget);
 };

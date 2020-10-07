@@ -30,6 +30,7 @@ void UInventoryWidgetBase::NativeConstruct()
 				CurSlot->SlotIndex = Row * Cols + Col;
 				CurSlot->RowIndex = Row;
 				CurSlot->ColIndex = Col;
+				CurSlot->SetOwnerWidget(this);
 				Slots.Add(CurSlot);
 
 				// Slot 화면에 표시.
@@ -62,41 +63,7 @@ void UInventoryWidgetBase::NativeConstruct()
 	}
 	
 }
-/*
-FReply UInventoryWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
-{
-	FEventReply reply;
-	reply.NativeReply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 
-	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
-	{
-		reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
-	}
-
-	return reply.NativeReply;
-}
-
-
-void UInventoryWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent, UDragDropOperation *& OutOperation)
-{
-	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
-
-	UMainWidgetDD* WidgetDD = Cast<UMainWidgetDD>(UWidgetBlueprintLibrary::CreateDragDropOperation(UMainWidgetDD::StaticClass()));
-	if (WidgetDD == nullptr)
-	{
-		return;
-	}
-	WidgetDD->WidgetToDrag = this;
-	WidgetDD->MouseOffset = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-
-	WidgetDD->DefaultDragVisual = this;
-	WidgetDD->Pivot = EDragPivot::MouseDown;
-
-	OutOperation = WidgetDD;
-
-	this->RemoveFromParent();
-}
-*/
 bool UInventoryWidgetBase::AddItem(int ItemIndex, int Count)
 {
 	for (int i = 0; i < Slots.Num(); i++)
@@ -191,4 +158,9 @@ int UInventoryWidgetBase::GetEmptySlotIndex()
 	}
 
 	return -1;
+}
+
+void UInventoryWidgetBase::SetOwnerWidget(UUserWidget * NewOwnerWidget)
+{
+	OwnerWidget = NewOwnerWidget;
 }

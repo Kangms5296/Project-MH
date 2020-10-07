@@ -29,4 +29,7 @@ public:
 
 	void GetItem1();
 	void GetItem2();
+
+	void ShowTooltip(FString ItemName, FString ItemDesc);
+	void HideTooltip();
 };

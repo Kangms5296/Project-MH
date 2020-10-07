@@ -16,6 +16,8 @@ class PROJECTMH_API UInventorySlotWidgetBase : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 
 	class UImage* I_Background;
 	class UImage* I_ItemThumnail;
@@ -43,4 +45,7 @@ public:
 	bool SlotReset();
 	bool SlotAdd(int AddCount);
 	bool SlotSub(int SubCount);
+
+	UUserWidget* OwnerWidget;
+	void SetOwnerWidget(UUserWidget* NewOwnerWidget);
 };
