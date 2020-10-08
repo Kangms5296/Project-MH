@@ -15,7 +15,5 @@ class PROJECTMH_API USlotWidgetDD : public UDragDropOperation
 	GENERATED_BODY()
 	
 public:
-	UUserWidget* BaseSlot;
-
-	UUserWidget* InstantSlot;
+	UUserWidget* FromSlot;
 };

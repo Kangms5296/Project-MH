@@ -7,6 +7,8 @@
 #include "../Battle/Character/Player/MainWidgetBase.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "Engine/GameViewportClient.h"
+
 void ATestPC::BeginPlay()
 {
 	Super::BeginPlay();
@@ -87,10 +89,10 @@ void ATestPC::ShowTooltip(FString ItemName, FString ItemDesc)
 		FVector2D MousePos;
 		GetMousePosition(MousePos.X, MousePos.Y);
 
-		FIntPoint ViewportSiz;
-		GetViewportSize(ViewportSiz.X, ViewportSiz.Y);
-
-		MainWidgetObject->ShowTooltip(ItemName, ItemDesc, MousePos, ViewportSiz);
+		FIntPoint ViewportSize;
+		GetViewportSize(ViewportSize.X, ViewportSize.Y);
+		 
+		MainWidgetObject->ShowTooltip(ItemName, ItemDesc, MousePos, ViewportSize);
 
 		IsShowTooltip = true;
 	}

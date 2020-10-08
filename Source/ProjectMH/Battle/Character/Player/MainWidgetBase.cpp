@@ -28,7 +28,6 @@ bool UMainWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const FDragDrop
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
 
-	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Drag : Drop"));
 	UMainWidgetDD* WidgetDD = Cast<UMainWidgetDD>(InOperation);
 	if (WidgetDD == nullptr)
 	{

@@ -18,6 +18,7 @@ class PROJECTMH_API UInventorySlotWidgetBase : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
@@ -45,8 +46,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Slot")
 	TSubclassOf<class UInventorySlotWidgetBase> InventorySlotWidgetClass;
 
-	bool SlotSet(FItemDataTable ItemData, int NewCount);
-	bool SlotReset();
-	bool SlotAdd(int AddCount);
-	bool SlotSub(int SubCount);
+	bool SetSlot(FItemDataTable ItemData, int NewCount);
+	bool ResetSlot();
+	bool AddCount(int AddCount);
+	bool SubCount(int SubCount);
+
+	class UInventoryWidgetBase* InventoryWidget;
+	void SetOwner(UInventoryWidgetBase * NewInventoryWidget);
+
+	bool DoChangeThumnail;
+	void DragSlotSet(FItemDataTable ItemData);
 };

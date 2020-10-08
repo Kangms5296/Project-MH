@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 void UInventorySlotWidgetBase::NativeConstruct()
 {
@@ -22,7 +23,13 @@ void UInventorySlotWidgetBase::NativeConstruct()
 	if (I_ItemThumnail)
 	{
 		I_ItemThumnail->SetVisibility(ESlateVisibility::Collapsed);
-		I_ItemThumnail->Visibility = ESlateVisibility::Visible;
+
+		if (DoChangeThumnail)
+		{
+			FStreamableManager Loader;
+			I_ItemThumnail->SetBrushFromTexture(Loader.LoadSynchronous<UTexture2D>(CurrentItem.ItemThumnail));
+			I_ItemThumnail->SetVisibility(ESlateVisibility::Visible);
+		}
 	}
 
 	T_ItemCount = Cast<UTextBlock>(GetWidgetFromName(TEXT("ItemCount")));
@@ -36,11 +43,21 @@ void UInventorySlotWidgetBase::NativeOnMouseEnter(const FGeometry & InGeometry, 
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 
+
+}
+
+FReply UInventorySlotWidgetBase::NativeOnMouseMove(const FGeometry & InGeometry, const FPointerEvent & InMouseEvent)
+{
+	FEventReply Reply;
+	Reply.NativeReply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+
 	ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PC && IsUsing)
 	{
 		PC->ShowTooltip(CurrentItem.ItemName, CurrentItem.ItemDescription);
 	}
+
+	return Reply.NativeReply;
 }
 
 void UInventorySlotWidgetBase::NativeOnMouseLeave(const FPointerEvent & InMouseEvent)
@@ -72,7 +89,7 @@ FReply UInventorySlotWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeo
 		if (IsUsing)
 		{
 			// 아이템 사용
-			SlotSub(1);
+			SubCount(1);
 		}
 	}
 	// 좌클릭 드래그&드롭
@@ -98,26 +115,51 @@ void UInventorySlotWidgetBase::NativeOnDragDetected(const FGeometry & InGeometry
 		return;
 	}
 
-	SlotDD->BaseSlot = this;
+	SlotDD->FromSlot = this;
 
-	APlayerController* PC = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	UInventorySlotWidgetBase* DragedSlot = CreateWidget<UInventorySlotWidgetBase>(PC, InventorySlotWidgetClass);
-	DragedSlot->AddToViewport();
-	DragedSlot->SlotSet(CurrentItem, ItemCount);
+	UInventorySlotWidgetBase* DragVisualSlot = CreateWidget<UInventorySlotWidgetBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0), GetClass());
+	DragVisualSlot->DragSlotSet(CurrentItem);
 
-	SlotDD->DefaultDragVisual = DragedSlot;
-	SlotDD->Pivot = EDragPivot::MouseDown;
+	SlotDD->DefaultDragVisual = DragVisualSlot;
+	SlotDD->Pivot = EDragPivot::CenterCenter;
 
 	OutOperation = SlotDD;
 }
 
 bool UInventorySlotWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const FDragDropEvent & InDragDropEvent, UDragDropOperation * InOperation)
 {
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+
+	USlotWidgetDD* SlotDD = Cast<USlotWidgetDD>(InOperation);
+	if (SlotDD == nullptr)
+	{
+		return false;
+	}
+
+	UInventorySlotWidgetBase* FromSlot = Cast<UInventorySlotWidgetBase>(SlotDD->FromSlot);
+	if (FromSlot)
+	{
+		if (IsUsing)
+		{
+			FItemDataTable TempData = CurrentItem;
+			int TempCount = ItemCount;
+
+			InventoryWidget->SetSlot(RowIndex, ColIndex, FromSlot->CurrentItem, FromSlot->ItemCount);
+			InventoryWidget->SetSlot(FromSlot->RowIndex, FromSlot->ColIndex, TempData, TempCount);
+		}
+		else
+		{
+			InventoryWidget->SetSlot(RowIndex, ColIndex, FromSlot->CurrentItem, FromSlot->ItemCount);
+			InventoryWidget->ResetSlot(FromSlot->RowIndex, FromSlot->ColIndex);
+		}
+
+		return true;
+	}
 
 	return false;
 }
 
-bool UInventorySlotWidgetBase::SlotSet(FItemDataTable ItemData, int NewCount)
+bool UInventorySlotWidgetBase::SetSlot(FItemDataTable ItemData, int NewCount)
 {
 	CurrentItem = ItemData;
 
@@ -141,7 +183,7 @@ bool UInventorySlotWidgetBase::SlotSet(FItemDataTable ItemData, int NewCount)
 
 	return true;
 }
-bool UInventorySlotWidgetBase::SlotReset()
+bool UInventorySlotWidgetBase::ResetSlot()
 {
 	IsUsing = false;
 
@@ -158,7 +200,7 @@ bool UInventorySlotWidgetBase::SlotReset()
 	return true;
 }
 
-bool UInventorySlotWidgetBase::SlotAdd(int AddCount)
+bool UInventorySlotWidgetBase::AddCount(int AddCount)
 {
 	ItemCount += AddCount;
 	FString CountStr = FString::FromInt(ItemCount);
@@ -167,12 +209,12 @@ bool UInventorySlotWidgetBase::SlotAdd(int AddCount)
 	return true;
 }
 
-bool UInventorySlotWidgetBase::SlotSub(int SubCount)
+bool UInventorySlotWidgetBase::SubCount(int SubCount)
 {
 	ItemCount -= SubCount;
 	if (ItemCount <= 0)
 	{
-		SlotReset();
+		ResetSlot();
 
 		ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 		if (PC)
@@ -187,4 +229,24 @@ bool UInventorySlotWidgetBase::SlotSub(int SubCount)
 	}
 
 	return true;
+}
+
+void UInventorySlotWidgetBase::SetOwner(UInventoryWidgetBase * NewInventoryWidget)
+{
+	InventoryWidget = NewInventoryWidget;
+}
+
+void UInventorySlotWidgetBase::DragSlotSet(FItemDataTable ItemData)
+{
+	if (I_ItemThumnail)
+	{
+		FStreamableManager Loader;
+		I_ItemThumnail->SetBrushFromTexture(Loader.LoadSynchronous<UTexture2D>(ItemData.ItemThumnail));
+		I_ItemThumnail->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		CurrentItem = ItemData;
+		DoChangeThumnail = true;
+	}
 }
