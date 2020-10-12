@@ -77,7 +77,8 @@ void UTitleWidgetBase::NativeConstruct()
 
 	// 파일에서 기존 유저 데이터를 캐싱
 	UserDataManager = NewObject<UUserDataManager>(this);
-	UserDataManager->LoadUserDatasFromFile("C:\\UE\\Project\\Down\\Project-MH\\Content\\Data\\UserData\\UserData.txt");
+	FString LoadPath = FPaths::ProjectContentDir() + "\\Data\\UserData\\UserData.txt";
+	UserDataManager->LoadUserDatasFromFile(LoadPath);
 
 	ShowLogInPanel();
 }
@@ -135,7 +136,8 @@ void UTitleWidgetBase::OnClickStartServer()
 	if (PC)
 	{
 		// 캐싱 유저 정보를 저장
-		UserDataManager->SaveUserDatasToFile("C:\\UE\\Project\\Down\\Project-MH\\Content\\Data\\UserData\\UserData.txt");
+		FString SavePath = FPaths::ProjectContentDir() + "\\Data\\UserData\\UserData.txt";
+		UserDataManager->SaveUserDatasToFile(SavePath);
 
 		// 서버 생성
 		PC->StartServer();
@@ -151,7 +153,8 @@ void UTitleWidgetBase::OnClickConnectServer()
 		if (T_ServerIP)
 		{
 			// 캐싱 유저 정보를 저장
-			UserDataManager->SaveUserDatasToFile("C:\\UE\\Project\\Down\\Project-MH\\Content\\Data\\UserData\\UserData.txt");
+			FString SavePath = FPaths::ProjectContentDir() + "\\Data\\UserData\\UserData.txt";
+			UserDataManager->SaveUserDatasToFile(SavePath);
 
 			// 서버 접속
 			FString ServerIPAddress = T_ServerIP->GetText().ToString();
