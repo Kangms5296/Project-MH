@@ -21,10 +21,15 @@ public:
 	void SetUserNN(FString NewUserNN);
 	void SetUserID(FString NewUserID);
 
+	class UJsonHelper* GetJsonHelper();
+
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString UserNN;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString UserID;
+
+	UPROPERTY()
+	class UJsonHelper* JsonHelper;
 };

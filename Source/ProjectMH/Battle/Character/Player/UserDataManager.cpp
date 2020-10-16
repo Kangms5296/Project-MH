@@ -4,19 +4,20 @@
 #include "UserDataManager.h"
 #include "../../../Title/TitlePC.h"
 #include "../../../JsonHelper.h"
+#include "../../../MHGameInstance.h"
 #include "UserData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Serialization/JsonWriter.h"
 #include "Templates/SharedPointer.h"
 
 
-void UUserDataManager::LoadUserDatasFromFile(FString SavedPath)
+void UUserDataManager::LoadUserDatasFromFile(FString LoadPath)
 {
-	ATitlePC* PC = Cast<ATitlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	if (PC)
+	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
 	{
-		FString OutputString = PC->JsonHelper->LoadFromFile(SavedPath);
-		auto JsonArr = PC->JsonHelper->GetArrayField(OutputString, "Users");
+		FString OutputString = GI->GetJsonHelper()->LoadFromFile(LoadPath);
+		auto JsonArr = GI->GetJsonHelper()->GetArrayField(OutputString, "Users");
 
 		for (int i = 0; i < JsonArr.Num(); i++)
 		{
@@ -30,8 +31,8 @@ void UUserDataManager::LoadUserDatasFromFile(FString SavedPath)
 
 void UUserDataManager::SaveUserDatasToFile(FString SavePath)
 {
-	ATitlePC* PC = Cast<ATitlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	if (PC)
+	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
 	{
 		// Make JsonObject Array
 		TArray<TSharedPtr<FJsonValue>> JsonArr;
@@ -45,12 +46,12 @@ void UUserDataManager::SaveUserDatasToFile(FString SavePath)
 
 		// JsonArray To String
 		TSharedPtr<class FJsonObject> JsonStr;
-		PC->JsonHelper->StartMake(JsonStr);
-		PC->JsonHelper->AddArrayField(JsonStr, "Users", JsonArr);
-		FString OutputString = PC->JsonHelper->EndMake(JsonStr);
+		GI->GetJsonHelper()->StartMake(JsonStr);
+		GI->GetJsonHelper()->AddArrayField(JsonStr, "Users", JsonArr);
+		FString OutputString = GI->GetJsonHelper()->EndMake(JsonStr);
 
 		// Save File
-		PC->JsonHelper->SaveToFile(OutputString, SavePath);
+		GI->GetJsonHelper()->SaveToFile(OutputString, SavePath);
 	}
 }
 

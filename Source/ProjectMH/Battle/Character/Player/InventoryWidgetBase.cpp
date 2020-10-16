@@ -5,6 +5,8 @@
 #include "InventorySlotWidgetBase.h"
 #include "WidgetHeaderBase.h"
 #include "MainWidgetDD.h"
+#include "../../../MHGameInstance.h"
+#include "../../../JsonHelper.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
@@ -36,9 +38,6 @@ void UInventoryWidgetBase::NativeConstruct()
 				UUniformGridSlot* GridSlot = UGP_SlotManageGrid->AddChildToUniformGrid(CurSlot, Row, Col);
 				GridSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Fill);
 				GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
-
-				// 저장 데이터 파싱.
-				// ..
 			}
 		}
 	}

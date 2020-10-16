@@ -2,7 +2,7 @@
 
 
 #include "MHGameInstance.h"
-
+#include "JsonHelper.h"
 
 FString UMHGameInstance::GetUserNN()
 {
@@ -22,4 +22,14 @@ void UMHGameInstance::SetUserNN(FString NewUserNN)
 void UMHGameInstance::SetUserID(FString NewUserID)
 {
 	UserID = NewUserID;
+}
+
+UJsonHelper* UMHGameInstance::GetJsonHelper()
+{
+	if (JsonHelper == nullptr)
+	{
+		JsonHelper = NewObject<UJsonHelper>();
+	}
+
+	return JsonHelper;
 }

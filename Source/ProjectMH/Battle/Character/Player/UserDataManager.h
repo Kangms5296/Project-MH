@@ -19,7 +19,7 @@ public:
 	UPROPERTY()
 	TArray<class UUserData*> UserDatas;  // 저장되어 있는 유저들의 데이터 캐싱
 
-	void LoadUserDatasFromFile(FString SavedPath);
+	void LoadUserDatasFromFile(FString LoadPath);
 	void SaveUserDatasToFile(FString SavePath);
 
 	void AddUser(class UUserData* NewData);
