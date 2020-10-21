@@ -3,3 +3,13 @@
 
 #include "PlayerCameraManagerBase.h"
 
+APlayerCameraManagerBase::APlayerCameraManagerBase()
+{
+
+}
+
+void APlayerCameraManagerBase::UpdateCamera(float DeltaTime)
+{
+	Super::UpdateCamera(DeltaTime);
+
+}

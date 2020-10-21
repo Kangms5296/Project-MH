@@ -5,6 +5,8 @@
 #include "../../../Basic/Item/Weapon/WeapomComponent.h"
 #include "../../BattlePC.h"
 #include "../../../Test/TestPC.h"
+#include "../../../Basic/Item/Weapon/BulletBase.h"
+#include "../../../Basic/Item/Weapon/DropItemBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -267,7 +269,7 @@ void APlayerBase::StartFire()
 
 void APlayerBase::OnFire()
 {
-	if (bIsFire)
+	if (!bIsFire)
 	{
 		return;
 	}
@@ -275,7 +277,21 @@ void APlayerBase::OnFire()
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
 	{
-		
+		int32 ScreenSizeX;
+		int32 ScreenSizeY;
+		PC->GetViewportSize(ScreenSizeX, ScreenSizeY);
+
+		//int RandX = FMath::RandRange(-20, 20);
+		//int RandY = FMath::RandRange(3, 20);
+		FVector CrosshairWorldPosition; //3D
+		FVector CrosshairWorldDirection; //3D 
+		//PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2 + RandX, ScreenSizeY / 2 + RandY, CrosshairWorldPosition, CrosshairWorldDirection);
+		PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2, ScreenSizeY / 2, CrosshairWorldPosition, CrosshairWorldDirection);
+
+		FVector FirePos = Weapon->GetSocketLocation(TEXT("Muzzle"));
+		FVector FireDir = CrosshairWorldDirection;
+
+		GetWorld()->SpawnActor<AActor>(BulletClass, FirePos, FireDir.Rotation());
 	}
 
 	GetWorldTimerManager().SetTimer(FireTimerHandle,
@@ -318,4 +334,26 @@ FRotator APlayerBase::GetAimOffset() const
 	const FRotator AimRotLS = AimDirLS.Rotation();
 
 	return AimRotLS;
+}
+
+void APlayerBase::AddNearItem(ADropItemBase * AddItem)
+{
+	if (NearItemList.Num() > 0)
+	{
+		NearItemList[NearItemList.Num() - 1]->SetHighlight(false);
+	}
+
+	NearItemList.Add(AddItem);
+	NearItemList[NearItemList.Num() - 1]->SetHighlight(true);
+}
+
+void APlayerBase::SubNearItem(ADropItemBase * SubItem)
+{
+	NearItemList[NearItemList.Num() - 1]->SetHighlight(false);
+	NearItemList.Remove(SubItem);
+	
+	if (NearItemList.Num() > 0)
+	{
+		NearItemList[NearItemList.Num() - 1]->SetHighlight(true);
+	}
 }

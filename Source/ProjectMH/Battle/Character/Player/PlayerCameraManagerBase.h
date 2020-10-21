@@ -15,7 +15,7 @@ class PROJECTMH_API APlayerCameraManagerBase : public APlayerCameraManager
 	GENERATED_BODY()
 	
 public:
-	ABasicPCM();
+	APlayerCameraManagerBase();
 
 	virtual void UpdateCamera(float DeltaTime) override;
 

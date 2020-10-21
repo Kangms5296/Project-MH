@@ -108,4 +108,11 @@ public:
 	void StopIronsight();
 
 	FRotator GetAimOffset() const;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<class ABulletBase> BulletClass;
+
+	TArray<class ADropItemBase*>NearItemList;
+	void AddNearItem(class ADropItemBase* AddItem);
+	void SubNearItem(class ADropItemBase* SubItem);
 };
