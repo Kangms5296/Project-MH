@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../../Item/ItemDataTable.h"
 #include "PlayerBase.generated.h"
 
 UCLASS()
@@ -115,4 +116,14 @@ public:
 	TArray<class ADropItemBase*>NearItemList;
 	void AddNearItem(class ADropItemBase* AddItem);
 	void SubNearItem(class ADropItemBase* SubItem);
+
+	void Pickup();
+
+	UFUNCTION(Server, Reliable)
+	void C2S_CheckPickupItem(class ADropItemBase* PickupItem);
+	void C2S_CheckPickupItem_Implementation(class ADropItemBase* NearItem);
+
+	UFUNCTION(Client, Reliable)
+	void S2C_InsertItem(FItemDataTable ItemData);
+	void S2C_InsertItem_Implementation(FItemDataTable ItemData);
 };

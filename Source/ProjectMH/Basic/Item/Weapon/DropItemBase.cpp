@@ -8,8 +8,11 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Net/UnrealNetwork.h"
+
+#include "../../../Test/TestGM.h"
 
 // Sets default values
 ADropItemBase::ADropItemBase()
@@ -40,18 +43,6 @@ void ADropItemBase::BeginPlay()
 
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &ADropItemBase::ProcessBeginOverlap);
 	Sphere->OnComponentEndOverlap.AddDynamic(this, &ADropItemBase::ProcessEndOverlap);
-
-	if (NameWidget)
-	{
-		UDropItemNameWidgetBase* NameWidgetValue = Cast<UDropItemNameWidgetBase>(NameWidget->GetUserWidgetObject());
-		if (NameWidgetValue)
-		{
-			NameWidgetValue->InitWidget();
-
-			NameWidgetValue->SetName(ItemData.ItemName);
-			NameWidgetValue->SetBgColor(FLinearColor(0, 0, 0, 0.8f));
-		}
-	}
 }
 
 // Called every frame
@@ -72,11 +63,27 @@ void ADropItemBase::OnRep_ItemData()
 {
 	FStreamableManager Loader;
 	StaticMesh->SetStaticMesh(Loader.LoadSynchronous<UStaticMesh>(ItemData.ItemMesh));
+
+	if (NameWidget)
+	{
+		UDropItemNameWidgetBase* NameWidgetValue = Cast<UDropItemNameWidgetBase>(NameWidget->GetUserWidgetObject());
+		if (NameWidgetValue)
+		{
+			NameWidgetValue->InitWidget();
+
+			NameWidgetValue->SetName(ItemData.ItemName);
+			NameWidgetValue->SetBgColor(FLinearColor(0, 0, 0, 0.8f));
+
+			NameWidget->SetVisibility(true);
+		}
+	}
 }
 
 void ADropItemBase::Init(FItemDataTable NewData)
 {
 	ItemData = NewData;
+
+	OnRep_ItemData();
 }
 
 void ADropItemBase::ProcessBeginOverlap(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)

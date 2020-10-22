@@ -5,6 +5,8 @@
 #include "../../../Basic/Item/Weapon/WeapomComponent.h"
 #include "../../BattlePC.h"
 #include "../../../Test/TestPC.h"
+#include "MainWidgetBase.h"
+#include "InventoryWidgetBase.h"
 #include "../../../Basic/Item/Weapon/BulletBase.h"
 #include "../../../Basic/Item/Weapon/DropItemBase.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -90,9 +92,10 @@ void APlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("Ironsight"), IE_Pressed, this, &APlayerBase::StartIronsight);
 	PlayerInputComponent->BindAction(TEXT("Ironsight"), IE_Released, this, &APlayerBase::StopIronsight);
 
+	PlayerInputComponent->BindAction(TEXT("Pickup"), IE_Pressed, this, &APlayerBase::Pickup);
+
 	// PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &APlayerBase::Reload);
 
-	// PlayerInputComponent->BindAction(TEXT("Pickup"), IE_Pressed, this, &APlayerBase::Pickup);
 }
 
 float APlayerBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -355,5 +358,31 @@ void APlayerBase::SubNearItem(ADropItemBase * SubItem)
 	if (NearItemList.Num() > 0)
 	{
 		NearItemList[NearItemList.Num() - 1]->SetHighlight(true);
+	}
+}
+
+void APlayerBase::Pickup()
+{
+	if (NearItemList.Num() > 0)
+	{
+		C2S_CheckPickupItem(NearItemList[NearItemList.Num() - 1]);
+	}
+}
+
+void APlayerBase::C2S_CheckPickupItem_Implementation(ADropItemBase * NearItem)
+{
+	if (NearItem && !NearItem->IsPendingKill())
+	{
+		S2C_InsertItem(NearItem->ItemData);
+		NearItem->Destroy();
+	}
+}
+
+void APlayerBase::S2C_InsertItem_Implementation(FItemDataTable ItemData)
+{
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC && PC->IsLocalController())
+	{
+		PC->MainWidgetObject->InventoryObject->AddItem(ItemData, 1);
 	}
 }
