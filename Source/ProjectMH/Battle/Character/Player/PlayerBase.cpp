@@ -14,6 +14,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "GameframeWork/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -254,7 +255,6 @@ void APlayerBase::StopAttack()
 
 	case EWeaponType::Sword:
 	{
-		
 		break;
 	}
 	}
@@ -385,4 +385,59 @@ void APlayerBase::S2C_InsertItem_Implementation(FItemDataTable ItemData)
 	{
 		PC->MainWidgetObject->InventoryObject->AddItem(ItemData, 1);
 	}
+}
+
+void APlayerBase::UseItem(FItemDataTable ItemData)
+{
+	switch (ItemData.ItemType)
+	{
+	case EItemType::Consume:
+	{
+			C2S_RescueHP(ItemData.fValue1);
+	}
+	break;
+
+	case EItemType::Equip:
+	{
+		switch (ItemData.EquipType)
+		{
+		case ESlotType::Weapon:
+		{
+
+		}
+		break;
+		case ESlotType::Head:
+		{
+
+		}
+		break;
+		case ESlotType::Body:
+		{
+
+		}
+		break;
+		}
+	}
+	break;
+	}
+}
+
+void APlayerBase::C2S_RescueHP_Implementation(int RescueValue)
+{
+	CurrentHP += RescueValue;
+	CurrentHP = FMath::Clamp(CurrentHP, 0.0f, MaxHP);
+	OnRep_CurrentHP();
+
+	S2A_SpawnRescueEffect();
+}
+
+void APlayerBase::S2A_SpawnRescueEffect_Implementation()
+{
+	if (RescueEffect)
+	{
+		UGameplayStatics::SpawnEmitterAttached(
+			RescueEffect,
+			GetMesh());
+	};
+
 }

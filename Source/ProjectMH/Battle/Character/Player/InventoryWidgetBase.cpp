@@ -51,7 +51,8 @@ void UInventoryWidgetBase::NativeConstruct()
 	if (T_Gold)
 	{
 		// 저장 데이터 파싱.
-		FString Temp = "0";
+		// CurrentMoney = 
+		FString Temp = FString::FromInt(CurrentMoney);
 		T_Gold->SetText(FText::FromString(Temp));
 	}
 }
@@ -60,13 +61,21 @@ bool UInventoryWidgetBase::AddItem(FItemDataTable ItemData, int Count)
 {
 	for (int i = 0; i < Slots.Num(); i++)
 	{
-		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex)
+		if ((Slots[i]->IsUsing)	&& (Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex))
 		{
-			bool Result = Slots[i]->AddCount(Count);
-			if (Result)
+			if (Slots[i]->ItemCount + Count <= ItemData.iValue1)
 			{
-				// 기존 슬롯에 성공적으로 아이템 수만큼 추가
-				return true;
+				bool Result = Slots[i]->AddCount(Count);
+				if (Result)
+				{
+					// 기존 슬롯에 성공적으로 아이템 수만큼 추가
+					return true;
+				}
+			}
+			else
+			{
+				Slots[i]->AddCount(ItemData.iValue1 - Slots[i]->ItemCount);
+				Count -= ItemData.iValue1 - Slots[i]->ItemCount;
 			}
 		}
 	}
@@ -158,4 +167,27 @@ bool UInventoryWidgetBase::GetEmptySlotIndex(int& EmptyRow, int& EmptyCol)
 int UInventoryWidgetBase::GetSlotIndex(int Row, int Col)
 {
 	return Row * Cols + Col;
+}
+
+void UInventoryWidgetBase::AddMoney(int Count)
+{
+	if (T_Gold)
+	{
+		CurrentMoney += Count;
+
+		FString Temp = FString::FromInt(CurrentMoney);
+		T_Gold->SetText(FText::FromString(Temp));
+	}
+}
+
+void UInventoryWidgetBase::SubMoney(int Count)
+{
+	if (T_Gold)
+	{
+		CurrentMoney += Count;
+		CurrentMoney = CurrentMoney < 0 ? 0 : CurrentMoney;
+
+		FString Temp = FString::FromInt(CurrentMoney);
+		T_Gold->SetText(FText::FromString(Temp));
+	}
 }

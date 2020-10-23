@@ -126,4 +126,17 @@ public:
 	UFUNCTION(Client, Reliable)
 	void S2C_InsertItem(FItemDataTable ItemData);
 	void S2C_InsertItem_Implementation(FItemDataTable ItemData);
+
+	void UseItem(FItemDataTable ItemData);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Data")
+	class UParticleSystem* RescueEffect;
+
+	UFUNCTION(Server, Reliable)
+	void C2S_RescueHP(int RescueValue);
+	void C2S_RescueHP_Implementation(int RescueValue);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void S2A_SpawnRescueEffect();
+	void S2A_SpawnRescueEffect_Implementation();
 };

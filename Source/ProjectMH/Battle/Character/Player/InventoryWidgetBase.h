@@ -49,4 +49,8 @@ public:
 	bool GetEmptySlotIndex(int& EmptyRow, int& EmptyCol); // 인벤토리 내 미사용 Slot Index 반환
 
 	int GetSlotIndex(int Row, int Col);
+
+	int CurrentMoney;
+	void AddMoney(int Count);
+	void SubMoney(int Count);
 };

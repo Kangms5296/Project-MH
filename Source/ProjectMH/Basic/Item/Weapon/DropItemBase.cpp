@@ -62,7 +62,10 @@ void ADropItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void ADropItemBase::OnRep_ItemData()
 {
 	FStreamableManager Loader;
-	StaticMesh->SetStaticMesh(Loader.LoadSynchronous<UStaticMesh>(ItemData.ItemMesh));
+	StaticMesh->SetStaticMesh(Loader.LoadSynchronous<UStaticMesh>(ItemData.ItemStaticMesh));
+
+	float MeshHeight = StaticMesh->GetStaticMesh()->GetBounds().GetBox().GetSize().Z;
+	LAP->SetRelativeLocation(FVector(0, 0, 30 + MeshHeight));
 
 	if (NameWidget)
 	{

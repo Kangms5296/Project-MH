@@ -28,8 +28,6 @@ void ATestPC::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction(TEXT("Inventory"), IE_Pressed, this, &ATestPC::ToggleInventory);
-	InputComponent->BindAction(TEXT("GetItem1"), IE_Pressed, this, &ATestPC::GetItem1);
-	InputComponent->BindAction(TEXT("GetItem2"), IE_Pressed, this, &ATestPC::GetItem2);
 }
 
 void ATestPC::ToggleInventory()
@@ -65,18 +63,6 @@ void ATestPC::ToggleInventory()
 			SetMouseLocation(ViewportX * 0.5f, ViewportY * 0.5f);
 		}
 	}
-}
-
-void ATestPC::GetItem1()
-{
-	FItemDataTable Temp = *ItemDataTable->FindRow<FItemDataTable>("10", TEXT("ItemIndex"));
-	MainWidgetObject->InventoryObject->AddItem(Temp, 1);
-}
-
-void ATestPC::GetItem2()
-{
-	FItemDataTable Temp = *ItemDataTable->FindRow<FItemDataTable>("20", TEXT("ItemIndex"));
-	MainWidgetObject->InventoryObject->AddItem(Temp, 2);
 }
 
 void ATestPC::ShowTooltip(FString ItemName, FString ItemDesc)

@@ -3,6 +3,7 @@
 
 #include "InventorySlotWidgetBase.h"
 #include "MainWidgetBase.h"
+#include "PlayerBase.h"
 #include "InventoryWidgetBase.h"
 #include "../../../Test/TestPC.h"
 #include "SlotWidgetDD.h"
@@ -54,7 +55,7 @@ FReply UInventorySlotWidgetBase::NativeOnMouseMove(const FGeometry & InGeometry,
 	ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PC && IsUsing)
 	{
-		PC->ShowTooltip(CurrentItem.ItemName, CurrentItem.ItemDescription);
+		PC->ShowTooltip(CurrentItem.ItemName, CurrentItem.ItemDesc);
 	}
 
 	return Reply.NativeReply;
@@ -88,8 +89,17 @@ FReply UInventorySlotWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeo
 	{
 		if (IsUsing)
 		{
-			// 아이템 사용
-			SubCount(1);
+			APlayerBase* Player = Cast<APlayerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+			if (Player)
+			{
+				Player->UseItem(CurrentItem);
+
+				// 아이템 사용
+				SubCount(1);
+
+				// Ironsight 모드로의 진입을 막는다.
+				Reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::RightMouseButton);
+			}
 		}
 	}
 	// 좌클릭 드래그&드롭
@@ -141,11 +151,21 @@ bool UInventorySlotWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const 
 	{
 		if (IsUsing)
 		{
-			FItemDataTable TempData = CurrentItem;
-			int TempCount = ItemCount;
+			if (FromSlot->CurrentItem.ItemIndex == CurrentItem.ItemIndex)
+			{
+				int MoveCount = CurrentItem.iValue1 - ItemCount > FromSlot->ItemCount ? FromSlot->ItemCount : CurrentItem.iValue1 - ItemCount;
 
-			InventoryWidget->SetSlot(RowIndex, ColIndex, FromSlot->CurrentItem, FromSlot->ItemCount);
-			InventoryWidget->SetSlot(FromSlot->RowIndex, FromSlot->ColIndex, TempData, TempCount);
+				FromSlot->SubCount(MoveCount);
+				AddCount(MoveCount);
+			}
+			else
+			{
+				FItemDataTable TempData = CurrentItem;
+				int TempCount = ItemCount;
+
+				InventoryWidget->SetSlot(RowIndex, ColIndex, FromSlot->CurrentItem, FromSlot->ItemCount);
+				InventoryWidget->SetSlot(FromSlot->RowIndex, FromSlot->ColIndex, TempData, TempCount);
+			}
 		}
 		else
 		{

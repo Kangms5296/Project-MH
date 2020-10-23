@@ -28,13 +28,7 @@ public:
 	bool IsShowInventory;
 	void ToggleInventory();
 
-	void GetItem1();
-	void GetItem2();
-
 	bool IsShowTooltip;
 	void ShowTooltip(FString ItemName, FString ItemDesc);
 	void HideTooltip();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-	class UDataTable* ItemDataTable;
 };
