@@ -15,9 +15,9 @@ enum class EItemType : uint8
 };
 
 UENUM(BlueprintType)
-enum class ESlotType : uint8
+enum class EWeaponType : uint8
 {
-	NotUse = 0		UMETA(Display = "NotUse"),
+	Unknown = 0		UMETA(Display = "NoWeapon"),
 	Gun = 1			UMETA(Display = "Gun"),
 	Sword = 2		UMETA(Display = "Sword"),
 };
@@ -38,7 +38,7 @@ public:
 	EItemType ItemType;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	ESlotType EquipType;
+	EWeaponType WeaponType;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString ItemName;

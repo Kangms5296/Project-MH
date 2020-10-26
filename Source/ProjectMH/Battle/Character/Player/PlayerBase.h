@@ -141,4 +141,11 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void S2A_SpawnRescueEffect();
 	void S2A_SpawnRescueEffect_Implementation();
+
+	void ArmWeapon(FItemDataTable ItemData);
+	void DisArmWeapon();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void S2A_SetWeapon(bool NewState, FItemDataTable NewData);
+	void S2A_SetWeapon_Implementation(bool NewState, FItemDataTable NewData);
 };

@@ -3,6 +3,7 @@
 
 #include "PlayerAnimInstance.h"
 #include "PlayerBase.h"
+#include "../../../Basic/Item/Weapon/WeapomComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -20,6 +21,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsSprint = Pawn->bIsSprint;
 		bIsIronsight = Pawn->bIsIronsight;
 		bIsJumping = Pawn->GetCharacterMovement()->IsFalling();
+		WeaponType = Pawn->Weapon->CurrentWeaponData.WeaponType;
 
 		FRotator AimRotation = Pawn->GetAimOffset();
 		AimYaw = AimRotation.Yaw;

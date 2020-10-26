@@ -16,6 +16,8 @@ class PROJECTMH_API ATestPC : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	ATestPC();
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 

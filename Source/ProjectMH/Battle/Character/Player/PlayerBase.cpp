@@ -205,6 +205,9 @@ void APlayerBase::C2S_SetSprint_Implementation(bool State)
 
 void APlayerBase::ToggleCrouch()
 {
+	if (GetCharacterMovement()->IsFalling())
+		return;
+
 	if (CanCrouch())
 	{
 		Crouch();
@@ -217,7 +220,7 @@ void APlayerBase::ToggleCrouch()
 
 void APlayerBase::StartAttack()
 {
-	switch (Weapon->WeaponType)
+	switch (Weapon->CurrentWeaponData.WeaponType)
 	{
 	case EWeaponType::Unknown:
 	{
@@ -241,7 +244,7 @@ void APlayerBase::StartAttack()
 
 void APlayerBase::StopAttack()
 {
-	switch (Weapon->WeaponType)
+	switch (Weapon->CurrentWeaponData.WeaponType)
 	{
 	case EWeaponType::Unknown:
 	{
@@ -319,17 +322,22 @@ void APlayerBase::C2S_SpawnBullet_Implementation(bool State)
 
 void APlayerBase::C2S_SetIronsight_Implementation(bool State)
 {
-
+	bIsIronsight = State;
 }
 
 void APlayerBase::StartIronsight()
 {
+	if (GetCharacterMovement()->IsFalling())
+		return;
 
+	bIsIronsight = true;
+	C2S_SetIronsight(true);
 }
 
 void APlayerBase::StopIronsight()
 {
-
+	bIsIronsight = false;
+	C2S_SetIronsight(false);
 }
 
 FRotator APlayerBase::GetAimOffset() const
@@ -403,38 +411,50 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 	case EItemType::Equip:
 	{
-		switch (ItemData.EquipType)
+		switch (ItemData.WeaponType)
 		{
-		case ESlotType::Gun:
+		case EWeaponType::Gun:
 		{
 			// 사용중인 무기 Slot에 표시
 			if (UsingGunSlot != nullptr)
 			{
 				UsingGunSlot->UnDoHighlightSlotBG();
+				UsingGunSlot->IsHighlight = false;
 			}
-			UsingGunSlot = UseSlot;
-			UsingGunSlot->DoHighlightSlotBG();
+
+			if (UsingGunSlot != UseSlot)
+			{
+				UsingGunSlot = UseSlot;
+				UsingGunSlot->DoHighlightSlotBG();
+				UsingGunSlot->IsHighlight = true;
+
+				ArmWeapon(ItemData);
+			}
+			else
+			{
+				UsingGunSlot = nullptr;
+				DisArmWeapon();
+			}
 		}
 		break;
 
-		case ESlotType::Sword:
+		case EWeaponType::Sword:
 		{
 			// 사용중인 무기 Slot에 표시
 			if (UsingSwordSlot != nullptr)
 			{
 				UsingSwordSlot->UnDoHighlightSlotBG();
+				UsingSwordSlot->IsHighlight = false;
 			}
 			UsingSwordSlot = UseSlot;
 			UsingSwordSlot->DoHighlightSlotBG();
+			UsingSwordSlot->IsHighlight = true;
+
+			ArmWeapon(ItemData);
 		}
 		break;
 
 		}
-
-		// 무기 장착
-		FStreamableManager Loader;
-		USkeletalMesh* TempMesh = Loader.LoadSynchronous<USkeletalMesh>(ItemData.ItemSkeletalMesh);
-		Weapon->SetSkeletalMesh(TempMesh);
 	}
 	break;
 
@@ -460,4 +480,39 @@ void APlayerBase::S2A_SpawnRescueEffect_Implementation()
 			GetMesh());
 	};
 
+}
+
+void APlayerBase::ArmWeapon(FItemDataTable ItemData)
+{
+	S2A_SetWeapon(true , ItemData);
+}
+
+void APlayerBase::DisArmWeapon()
+{
+	FItemDataTable TempData;
+	TempData.WeaponType = EWeaponType::Unknown;
+
+	S2A_SetWeapon(false, TempData);
+}
+
+void APlayerBase::S2A_SetWeapon_Implementation(bool NewState, FItemDataTable NewData)
+{
+	if (NewState)
+	{
+		// 무기 장착
+		FStreamableManager Loader;
+		USkeletalMesh* TempMesh = Loader.LoadSynchronous<USkeletalMesh>(NewData.ItemSkeletalMesh);
+		Weapon->SetSkeletalMesh(TempMesh);
+
+		// 애니메이션 스테이트 머신 변경
+		Weapon->CurrentWeaponData = NewData;
+	}
+	else
+	{
+		// 무기 해제
+		Weapon->SetSkeletalMesh(nullptr);
+
+		// 애니메이션 스테이트 머신 변경
+		Weapon->CurrentWeaponData = NewData;
+	}
 }

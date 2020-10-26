@@ -277,6 +277,8 @@ void UInventorySlotWidgetBase::DoHighlightSlotBG()
 	if (I_UseEffect)
 	{
 		I_UseEffect->SetVisibility(ESlateVisibility::Visible);
+
+		IsHighlight = true;
 	}
 }
 
@@ -285,5 +287,7 @@ void UInventorySlotWidgetBase::UnDoHighlightSlotBG()
 	if (I_UseEffect)
 	{
 		I_UseEffect->SetVisibility(ESlateVisibility::Collapsed);
+
+		IsHighlight = false;
 	}
 }

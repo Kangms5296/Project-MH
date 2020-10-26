@@ -8,6 +8,12 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Engine/GameViewportClient.h"
+#include "../Battle/Character/Player/PlayerCameraManagerBase.h"
+
+ATestPC::ATestPC()
+{
+	PlayerCameraManagerClass = APlayerCameraManagerBase::StaticClass();
+}
 
 void ATestPC::BeginPlay()
 {

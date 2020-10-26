@@ -4,15 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "../../../Battle/Item/ItemDataTable.h"
 #include "WeapomComponent.generated.h"
-
-UENUM(BlueprintType)
-enum class EWeaponType : uint8
-{
-	Unknown = 0		UMETA(Display = "Unknown"),
-	Gun		= 1		UMETA(Display = "Gun"),
-	Sword	= 2		UMETA(Display = "Sword"),
-};
 
 
 /**
@@ -24,6 +17,6 @@ class PROJECTMH_API UWeapomComponent : public USkeletalMeshComponent
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	EWeaponType WeaponType;
+	UPROPERTY()
+	FItemDataTable CurrentWeaponData;
 };

@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "../../Item/ItemDataTable.h"
 #include "PlayerAnimInstance.generated.h"
+
 
 /**
  * 
@@ -37,6 +39,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 	uint64 bIsJumping : 1;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+	EWeaponType WeaponType;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
 	float AimYaw;

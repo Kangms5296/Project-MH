@@ -57,6 +57,7 @@ public:
 	bool DoChangeThumnail;
 	void DragSlotSet(FItemDataTable ItemData);
 
+	bool IsHighlight;
 	void DoHighlightSlotBG();
 	void UnDoHighlightSlotBG();
 };
