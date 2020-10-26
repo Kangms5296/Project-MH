@@ -24,7 +24,7 @@ public:
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
-	class UBorder* I_Background;
+	class UBorder* I_UseEffect;
 	class UBorder* I_ItemThumnail;
 	class UTextBlock* T_ItemCount;
 
@@ -56,4 +56,7 @@ public:
 
 	bool DoChangeThumnail;
 	void DragSlotSet(FItemDataTable ItemData);
+
+	void DoHighlightSlotBG();
+	void UnDoHighlightSlotBG();
 };

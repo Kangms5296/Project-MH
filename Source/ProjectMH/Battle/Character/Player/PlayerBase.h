@@ -127,7 +127,9 @@ public:
 	void S2C_InsertItem(FItemDataTable ItemData);
 	void S2C_InsertItem_Implementation(FItemDataTable ItemData);
 
-	void UseItem(FItemDataTable ItemData);
+	class UInventorySlotWidgetBase* UsingGunSlot;
+	class UInventorySlotWidgetBase* UsingSwordSlot;
+	void UseItem(class UInventorySlotWidgetBase* UseSlot,FItemDataTable ItemData);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Data")
 	class UParticleSystem* RescueEffect;

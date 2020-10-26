@@ -7,6 +7,7 @@
 #include "../../../Test/TestPC.h"
 #include "MainWidgetBase.h"
 #include "InventoryWidgetBase.h"
+#include "InventorySlotWidgetBase.h"
 #include "../../../Basic/Item/Weapon/BulletBase.h"
 #include "../../../Basic/Item/Weapon/DropItemBase.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -19,6 +20,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/StreamableManager.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -387,13 +389,15 @@ void APlayerBase::S2C_InsertItem_Implementation(FItemDataTable ItemData)
 	}
 }
 
-void APlayerBase::UseItem(FItemDataTable ItemData)
+void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable ItemData)
 {
 	switch (ItemData.ItemType)
 	{
 	case EItemType::Consume:
 	{
-			C2S_RescueHP(ItemData.fValue1);
+		C2S_RescueHP(ItemData.fValue1);
+
+		UseSlot->SubCount(1);
 	}
 	break;
 
@@ -401,25 +405,41 @@ void APlayerBase::UseItem(FItemDataTable ItemData)
 	{
 		switch (ItemData.EquipType)
 		{
-		case ESlotType::Weapon:
+		case ESlotType::Gun:
 		{
-
+			// 사용중인 무기 Slot에 표시
+			if (UsingGunSlot != nullptr)
+			{
+				UsingGunSlot->UnDoHighlightSlotBG();
+			}
+			UsingGunSlot = UseSlot;
+			UsingGunSlot->DoHighlightSlotBG();
 		}
 		break;
-		case ESlotType::Head:
-		{
 
+		case ESlotType::Sword:
+		{
+			// 사용중인 무기 Slot에 표시
+			if (UsingSwordSlot != nullptr)
+			{
+				UsingSwordSlot->UnDoHighlightSlotBG();
+			}
+			UsingSwordSlot = UseSlot;
+			UsingSwordSlot->DoHighlightSlotBG();
 		}
 		break;
-		case ESlotType::Body:
-		{
 
 		}
-		break;
-		}
+
+		// 무기 장착
+		FStreamableManager Loader;
+		USkeletalMesh* TempMesh = Loader.LoadSynchronous<USkeletalMesh>(ItemData.ItemSkeletalMesh);
+		Weapon->SetSkeletalMesh(TempMesh);
 	}
 	break;
+
 	}
+
 }
 
 void APlayerBase::C2S_RescueHP_Implementation(int RescueValue)

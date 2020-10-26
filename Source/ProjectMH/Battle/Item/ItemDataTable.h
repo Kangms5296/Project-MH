@@ -18,9 +18,8 @@ UENUM(BlueprintType)
 enum class ESlotType : uint8
 {
 	NotUse = 0		UMETA(Display = "NotUse"),
-	Weapon = 1		UMETA(Display = "Weapon"),
-	Body = 2		UMETA(Display = "Body"),
-	Head = 3		UMETA(Display = "Head"),
+	Gun = 1			UMETA(Display = "Gun"),
+	Sword = 2		UMETA(Display = "Sword"),
 };
 
 /**

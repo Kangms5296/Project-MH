@@ -18,7 +18,11 @@ void UInventorySlotWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	I_Background = Cast<UBorder>(GetWidgetFromName(TEXT("Background")));
+	I_UseEffect = Cast<UBorder>(GetWidgetFromName(TEXT("UseEffect")));
+	if (I_UseEffect)
+	{
+		I_UseEffect->SetVisibility(ESlateVisibility::Collapsed);
+	}
 
 	I_ItemThumnail = Cast<UBorder>(GetWidgetFromName(TEXT("ItemThumnail")));
 	if (I_ItemThumnail)
@@ -92,10 +96,7 @@ FReply UInventorySlotWidgetBase::NativeOnMouseButtonDown(const FGeometry & InGeo
 			APlayerBase* Player = Cast<APlayerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
 			if (Player)
 			{
-				Player->UseItem(CurrentItem);
-
-				// 아이템 사용
-				SubCount(1);
+				Player->UseItem(this, CurrentItem);
 
 				// Ironsight 모드로의 진입을 막는다.
 				Reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::RightMouseButton);
@@ -268,5 +269,21 @@ void UInventorySlotWidgetBase::DragSlotSet(FItemDataTable ItemData)
 	{
 		CurrentItem = ItemData;
 		DoChangeThumnail = true;
+	}
+}
+
+void UInventorySlotWidgetBase::DoHighlightSlotBG()
+{
+	if (I_UseEffect)
+	{
+		I_UseEffect->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UInventorySlotWidgetBase::UnDoHighlightSlotBG()
+{
+	if (I_UseEffect)
+	{
+		I_UseEffect->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
