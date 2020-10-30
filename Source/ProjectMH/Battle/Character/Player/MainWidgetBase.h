@@ -24,10 +24,22 @@ public:
 	void ShowInventory();
 	void HideInventory();
 
-
 	UPROPERTY()
 	class UInventorySlotTooltipWidgetBase* InventoryTooltipObject;
 
 	void ShowTooltip(FString NewItemName, FString NewItemDesc, FVector2D MousePos, FIntPoint ViewportSize);
 	void HideTooltip();
+
+	UPROPERTY()
+	class UImage* Crosshair;
+
+	void ShowCrosshair();
+	void HideCrosshair();
+
+	UPROPERTY()
+	class UTextBlock* BulletText;
+
+	void SetBulletText(FString NewText);
+	void ShowBulletText();
+	void HideBulletText();
 };

@@ -154,7 +154,7 @@ bool UInventorySlotWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const 
 		{
 			if (FromSlot->CurrentItem.ItemIndex == CurrentItem.ItemIndex)
 			{
-				int MoveCount = CurrentItem.iValue1 - ItemCount > FromSlot->ItemCount ? FromSlot->ItemCount : CurrentItem.iValue1 - ItemCount;
+				int MoveCount = CurrentItem.Value2 - ItemCount > FromSlot->ItemCount ? FromSlot->ItemCount : CurrentItem.Value2 - ItemCount;
 
 				FromSlot->SubCount(MoveCount);
 				AddCount(MoveCount);
@@ -172,6 +172,17 @@ bool UInventorySlotWidgetBase::NativeOnDrop(const FGeometry & InGeometry, const 
 		{
 			InventoryWidget->SetSlot(RowIndex, ColIndex, FromSlot->CurrentItem, FromSlot->ItemCount);
 			InventoryWidget->ResetSlot(FromSlot->RowIndex, FromSlot->ColIndex);
+		}
+
+		if (FromSlot->IsHighlight)
+		{
+			FromSlot->UnDoHighlightSlotBG();
+			DoHighlightSlotBG();
+		}
+		else if (IsHighlight)
+		{
+			UnDoHighlightSlotBG();
+			FromSlot->DoHighlightSlotBG();
 		}
 
 		return true;
@@ -279,6 +290,24 @@ void UInventorySlotWidgetBase::DoHighlightSlotBG()
 		I_UseEffect->SetVisibility(ESlateVisibility::Visible);
 
 		IsHighlight = true;
+
+		APlayerBase* Player = Cast<APlayerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn());
+		if (Player)
+		{
+			switch (CurrentItem.WeaponType)
+			{
+			case EWeaponType::Gun:
+			{
+				Player->UsingGunSlot = this;
+			}
+			break;
+
+			case EWeaponType::Sword:
+			{
+				Player->UsingSwordSlot = this;
+			}
+			}
+		}
 	}
 }
 

@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PlayerAnimInstance.h"
 #include "PlayerBase.h"
 #include "../../../Basic/Item/Weapon/WeapomComponent.h"
@@ -26,7 +23,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		FRotator AimRotation = Pawn->GetAimOffset();
 		AimYaw = AimRotation.Yaw;
 		AimPitch = AimRotation.Pitch;
-
 		/*
 		bIsReload = Pawn->bIsReload;
 
@@ -40,3 +36,18 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		*/
 	}
 }
+
+/*
+void UPlayerAnimInstance::AnimNotify_ReloadEnd(UAnimNotify* AnimNotify)
+{
+	APlayerBase* Pawn = Cast<APlayerBase>(TryGetPawnOwner());
+	if (Pawn && Pawn->IsValidLowLevel())
+	{
+		bIsReload = false;
+		Pawn->bIsReload = false;
+		Pawn->C2S_SetReload(false);
+
+		Pawn->Weapon->CurrentWeaponData.Value4 = Pawn->Weapon->CurrentWeaponData.Value5;
+	}
+}
+*/

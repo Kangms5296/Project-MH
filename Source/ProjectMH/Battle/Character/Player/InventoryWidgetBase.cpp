@@ -63,7 +63,7 @@ bool UInventoryWidgetBase::AddItem(FItemDataTable ItemData, int Count)
 	{
 		if ((Slots[i]->IsUsing)	&& (Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex))
 		{
-			if (Slots[i]->ItemCount + Count <= ItemData.iValue1)
+			if (Slots[i]->ItemCount + Count <= ItemData.Value2)
 			{
 				bool Result = Slots[i]->AddCount(Count);
 				if (Result)
@@ -74,8 +74,8 @@ bool UInventoryWidgetBase::AddItem(FItemDataTable ItemData, int Count)
 			}
 			else
 			{
-				Slots[i]->AddCount(ItemData.iValue1 - Slots[i]->ItemCount);
-				Count -= ItemData.iValue1 - Slots[i]->ItemCount;
+				Slots[i]->AddCount(ItemData.Value2 - Slots[i]->ItemCount);
+				Count -= ItemData.Value2 - Slots[i]->ItemCount;
 			}
 		}
 	}
@@ -98,18 +98,11 @@ bool UInventoryWidgetBase::AddItem(FItemDataTable ItemData, int Count)
 
 bool UInventoryWidgetBase::SubItem(FItemDataTable ItemData, int Count)
 {
+	// 현재 가지고 있는 아이템 중 ItemData의 ItemIndex에 해당하는 아이템이 있는지 확인
 	for (int i = 0; i < Slots.Num(); i++)
-	{
 		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == ItemData.ItemIndex)
-		{
-			bool Result = Slots[i]->SubCount(Count);
-			if (Result)
-			{
-				// 기존 슬롯에 성공적으로 아이템 수만큼 제거
-				return true;
-			}
-		}
-	}
+			// 있으면 SubCount 실행
+			return Slots[i]->SubCount(Count);
 
 	// 기존에 아이템이 없는 경우
 	return false;
@@ -190,4 +183,28 @@ void UInventoryWidgetBase::SubMoney(int Count)
 		FString Temp = FString::FromInt(CurrentMoney);
 		T_Gold->SetText(FText::FromString(Temp));
 	}
+}
+
+bool UInventoryWidgetBase::AddCount(int Index, int Count)
+{
+	// 현재 가지고 있는 아이템 중 ItemData의 ItemIndex에 해당하는 아이템이 있는지 확인
+	for (int i = 0; i < Slots.Num(); i++)
+		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == Index)
+			// 있으면 SubCount 실행
+			return Slots[i]->AddCount(Count);
+
+	// 기존에 아이템이 없는 경우
+	return false;
+}
+
+bool UInventoryWidgetBase::SubCount(int Index, int Count)
+{
+	// 현재 가지고 있는 아이템 중 ItemData의 ItemIndex에 해당하는 아이템이 있는지 확인
+	for (int i = 0; i < Slots.Num(); i++)
+		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == Index)
+			// 있으면 SubCount 실행
+			return Slots[i]->SubCount(Count);
+
+	// 기존에 아이템이 없는 경우
+	return false;
 }

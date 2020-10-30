@@ -15,6 +15,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/DecalComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "GameframeWork/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -26,7 +27,7 @@
 // Sets default values
 APlayerBase::APlayerBase()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -58,7 +59,6 @@ APlayerBase::APlayerBase()
 void APlayerBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -89,15 +89,12 @@ void APlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayerBase::ToggleCrouch);
 
-	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayerBase::StartFire);
-	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &APlayerBase::StopFire);
-
 	PlayerInputComponent->BindAction(TEXT("Ironsight"), IE_Pressed, this, &APlayerBase::StartIronsight);
 	PlayerInputComponent->BindAction(TEXT("Ironsight"), IE_Released, this, &APlayerBase::StopIronsight);
 
 	PlayerInputComponent->BindAction(TEXT("Pickup"), IE_Pressed, this, &APlayerBase::Pickup);
 
-	// PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &APlayerBase::Reload);
+	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &APlayerBase::Reload);
 
 }
 
@@ -109,7 +106,6 @@ float APlayerBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 	{
 		return 0.0f;
 	}
-
 	CurrentHP -= DamageAmount;
 	OnRep_CurrentHP();
 
@@ -133,6 +129,7 @@ void APlayerBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
 	DOREPLIFETIME(APlayerBase, bIsFire);
 	DOREPLIFETIME(APlayerBase, bIsSprint);
+	DOREPLIFETIME(APlayerBase, bIsReload);
 	DOREPLIFETIME(APlayerBase, bIsIronsight);
 	DOREPLIFETIME(APlayerBase, CurrentHP);
 }
@@ -271,47 +268,189 @@ void APlayerBase::C2S_SetFire_Implementation(bool State)
 
 void APlayerBase::StartFire()
 {
+	if (GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
+
 	bIsFire = true;
 	OnFire();
 }
 
 void APlayerBase::OnFire()
 {
-	if (!bIsFire)
-	{
-		return;
-	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
+	ATestPC* PC = Cast<ATestPC>(GetController());
 	if (PC)
 	{
+		if (!bIsFire || GetCharacterMovement()->IsFalling() || bIsReload || Weapon->CurrentWeaponData.Value4 <= 0)
+		{
+			bIsFire = false;
+			return;
+		}
+		--Weapon->CurrentWeaponData.Value4;
+
 		int32 ScreenSizeX;
 		int32 ScreenSizeY;
-		PC->GetViewportSize(ScreenSizeX, ScreenSizeY);
-
-		//int RandX = FMath::RandRange(-20, 20);
-		//int RandY = FMath::RandRange(3, 20);
 		FVector CrosshairWorldPosition; //3D
 		FVector CrosshairWorldDirection; //3D 
-		//PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2 + RandX, ScreenSizeY / 2 + RandY, CrosshairWorldPosition, CrosshairWorldDirection);
-		PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2, ScreenSizeY / 2, CrosshairWorldPosition, CrosshairWorldDirection);
 
-		FVector FirePos = Weapon->GetSocketLocation(TEXT("Muzzle"));
-		FVector FireDir = CrosshairWorldDirection;
+		FVector CameraLocation;
+		FRotator CameraRotation;
 
-		GetWorld()->SpawnActor<AActor>(BulletClass, FirePos, FireDir.Rotation());
+		//사람 반동
+		int RandX = FMath::RandRange(-20, 20);
+		int RandY = FMath::RandRange(3, 20);
+
+		PC->GetViewportSize(ScreenSizeX, ScreenSizeY);
+		PC->DeprojectScreenPositionToWorld(ScreenSizeX / 2 + RandX, ScreenSizeY / 2 + RandY, CrosshairWorldPosition, CrosshairWorldDirection);
+
+		PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+		//총구 들리기(Tick에서 총 쏜 후에 애니메이션)
+		FRotator PlayerRotation = GetControlRotation();
+		PlayerRotation.Pitch += FMath::FRandRange(0.2f, 1.0f);
+		GetController()->SetControlRotation(PlayerRotation);
+
+		FVector TraceStart = CameraLocation;
+		FVector TraceEnd = TraceStart + (CrosshairWorldDirection * 99999.f);
+
+		C2S_ProcessFire(TraceStart, TraceEnd);
 	}
 
-	GetWorldTimerManager().SetTimer(FireTimerHandle,
+	GetWorldTimerManager().SetTimer(
+		FireTimerHandle,
 		this,
 		&APlayerBase::OnFire,
 		0.12f,
-		false);
+		false
+	);
+}
+
+void APlayerBase::C2S_ProcessFire_Implementation(FVector TraceStart, FVector TraceEnd)
+{
+	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
+
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+
+	TArray<AActor*> ActorToIgnore;
+	ActorToIgnore.Add(this);
+
+	FHitResult OutHit;
+
+	bool Result = UKismetSystemLibrary::LineTraceSingleForObjects(
+		GetWorld(),
+		TraceStart,
+		TraceEnd,
+		Objects,
+		true,
+		ActorToIgnore,
+		EDrawDebugTrace::None,
+		OutHit,
+		true,
+		FLinearColor::Red,
+		FLinearColor::Green,
+		5.0f
+	);
+
+	if (Result)
+	{
+		//all client spawn Hiteffect and Decal
+		S2A_SpawnHitEffectAndDecal(OutHit);
+
+		//Point Damage
+		UGameplayStatics::ApplyPointDamage(OutHit.GetActor(),
+			Weapon->CurrentWeaponData.Value3,
+			-OutHit.ImpactNormal,
+			OutHit,
+			GetController(),
+			this,
+			nullptr
+		);
+
+		MakeNoise(1.0f, this, OutHit.ImpactPoint);
+	}
+
+	//All Client Spawn Muzzleflash and Sound
+	S2A_SpawnMuzzleFlashAndSound();
 }
 
 void APlayerBase::StopFire()
 {
 	bIsFire = false;
+}
+
+void APlayerBase::S2A_SpawnMuzzleFlashAndSound_Implementation()
+{
+	//WeaponSound and MuzzleFlash
+	if (WeaponSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(),
+			WeaponSound,
+			Weapon->GetComponentLocation()
+		);
+	}
+
+	if (MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAttached(
+			MuzzleFlash,
+			Weapon,
+			TEXT("Muzzle"));
+	}
+}
+
+void APlayerBase::S2A_SpawnHitEffectAndDecal_Implementation(FHitResult OutHit)
+{
+	//HitEffect(Blood) and Decal
+	if (Cast<ACharacter>(OutHit.GetActor()))
+	{
+		//캐릭터
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+			BloodHitEffect,
+			OutHit.ImpactPoint + (OutHit.ImpactNormal * 10)
+		);
+	}
+	else
+	{
+		//지형
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+			HitEffect,
+			OutHit.ImpactPoint + (OutHit.ImpactNormal * 10)
+		);
+
+		UDecalComponent* NewDecal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+			NormalDecal,
+			FVector(5, 5, 5),
+			OutHit.ImpactPoint,
+			OutHit.ImpactNormal.Rotation(),
+			10.0f
+		);
+
+		NewDecal->SetFadeScreenSize(0.005f);
+
+	}
+}
+
+void APlayerBase::S2A_HitAction_Implementation(int Number)
+{
+	if (HitActionMontage)
+	{
+		FString SectionName = FString::Printf(TEXT("Hit%d"), Number);
+		PlayAnimMontage(HitActionMontage, 1.0f, FName(SectionName));
+	}
+}
+
+void APlayerBase::S2A_DeadAction_Implementation(int Number)
+{
+	if (DeadMontage)
+	{
+		FString SectionName = FString::Printf(TEXT("Death_%d"), Number);
+		PlayAnimMontage(DeadMontage, 1.0f, FName(SectionName));
+	}
+
+	DisableInput(Cast<APlayerController>(GetController()));
 }
 
 void APlayerBase::C2S_SpawnBullet_Implementation(bool State)
@@ -327,8 +466,14 @@ void APlayerBase::C2S_SetIronsight_Implementation(bool State)
 
 void APlayerBase::StartIronsight()
 {
-	if (GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling() || Weapon->CurrentWeaponData.WeaponType != EWeaponType::Gun)
 		return;
+
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC)
+	{
+		PC->MainWidgetObject->ShowCrosshair();
+	}
 
 	bIsIronsight = true;
 	C2S_SetIronsight(true);
@@ -336,6 +481,12 @@ void APlayerBase::StartIronsight()
 
 void APlayerBase::StopIronsight()
 {
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC)
+	{
+		PC->MainWidgetObject->HideCrosshair();
+	}
+
 	bIsIronsight = false;
 	C2S_SetIronsight(false);
 }
@@ -347,6 +498,22 @@ FRotator APlayerBase::GetAimOffset() const
 	const FRotator AimRotLS = AimDirLS.Rotation();
 
 	return AimRotLS;
+}
+
+void APlayerBase::C2S_SetReload_Implementation(bool newState)
+{
+	bIsReload = newState;
+}
+
+void APlayerBase::Reload()
+{
+	if (GetCharacterMovement()->IsFalling() || Weapon->CurrentWeaponData.WeaponType == EWeaponType::Unknown)
+	{
+		return;
+	}
+
+	bIsReload = true;
+	C2S_SetReload(true);
 }
 
 void APlayerBase::AddNearItem(ADropItemBase * AddItem)
@@ -364,7 +531,7 @@ void APlayerBase::SubNearItem(ADropItemBase * SubItem)
 {
 	NearItemList[NearItemList.Num() - 1]->SetHighlight(false);
 	NearItemList.Remove(SubItem);
-	
+
 	if (NearItemList.Num() > 0)
 	{
 		NearItemList[NearItemList.Num() - 1]->SetHighlight(true);
@@ -393,7 +560,7 @@ void APlayerBase::S2C_InsertItem_Implementation(FItemDataTable ItemData)
 	ATestPC* PC = Cast<ATestPC>(GetController());
 	if (PC && PC->IsLocalController())
 	{
-		PC->MainWidgetObject->InventoryObject->AddItem(ItemData, 1);
+		PC->MainWidgetObject->InventoryObject->AddItem(ItemData, ItemData.Value1);
 	}
 }
 
@@ -403,7 +570,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 	{
 	case EItemType::Consume:
 	{
-		C2S_RescueHP(ItemData.fValue1);
+		C2S_RescueHP(ItemData.Value3);
 
 		UseSlot->SubCount(1);
 	}
@@ -459,7 +626,6 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 	break;
 
 	}
-
 }
 
 void APlayerBase::C2S_RescueHP_Implementation(int RescueValue)
@@ -484,7 +650,7 @@ void APlayerBase::S2A_SpawnRescueEffect_Implementation()
 
 void APlayerBase::ArmWeapon(FItemDataTable ItemData)
 {
-	S2A_SetWeapon(true , ItemData);
+	C2S_SetWeapon(true, ItemData);
 }
 
 void APlayerBase::DisArmWeapon()
@@ -492,7 +658,12 @@ void APlayerBase::DisArmWeapon()
 	FItemDataTable TempData;
 	TempData.WeaponType = EWeaponType::Unknown;
 
-	S2A_SetWeapon(false, TempData);
+	C2S_SetWeapon(false, TempData);
+}
+
+void APlayerBase::C2S_SetWeapon_Implementation(bool NewState, FItemDataTable NewData)
+{
+	S2A_SetWeapon(NewState, NewData);
 }
 
 void APlayerBase::S2A_SetWeapon_Implementation(bool NewState, FItemDataTable NewData)

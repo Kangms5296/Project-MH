@@ -21,7 +21,7 @@ void ATestGM::BeginPlay()
 			{
 				ADropItemBase* TempItem = Cast<ADropItemBase>(ItemList[i]);
 
-				TempItem->Init(GetItemData(FMath::RandRange(1, 2) * 10));
+				TempItem->Init(GetItemData(FMath::RandRange(1, 3) * 10));
 			}
 		}), WaitTime, false);
 }

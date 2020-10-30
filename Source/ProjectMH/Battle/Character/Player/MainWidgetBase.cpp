@@ -6,6 +6,8 @@
 #include "InventorySlotWidgetBase.h"
 #include "InventorySlotTooltipWidgetBase.h"
 #include "MainWidgetDD.h"
+#include "Components/Image.h"
+#include "Components/TextBlock.h"
 
 void UMainWidgetBase::NativeConstruct()
 {
@@ -21,6 +23,18 @@ void UMainWidgetBase::NativeConstruct()
 	if (InventoryTooltipObject)
 	{
 		HideTooltip();
+	}
+
+	Crosshair = Cast<UImage>(GetWidgetFromName(TEXT("Crosshair")));
+	if (Crosshair)
+	{
+		HideCrosshair();
+	}
+
+	BulletText = Cast<UTextBlock>(GetWidgetFromName(TEXT("BulletText")));
+	if (BulletText)
+	{
+		HideBulletText();
 	}
 }
 
@@ -79,5 +93,45 @@ void UMainWidgetBase::HideTooltip()
 	if (InventoryTooltipObject)
 	{
 		InventoryTooltipObject->RemoveFromViewport();
+	}
+}
+
+void UMainWidgetBase::ShowCrosshair()
+{
+	if (Crosshair)
+	{
+		Crosshair->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UMainWidgetBase::HideCrosshair()
+{
+	if (Crosshair)
+	{
+		Crosshair->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainWidgetBase::SetBulletText(FString NewText)
+{
+	if (BulletText)
+	{
+		BulletText->SetText(FText::FromString(NewText));
+	}
+}
+
+void UMainWidgetBase::ShowBulletText()
+{
+	if (BulletText)
+	{
+		BulletText->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UMainWidgetBase::HideBulletText()
+{
+	if (BulletText)
+	{
+		BulletText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }

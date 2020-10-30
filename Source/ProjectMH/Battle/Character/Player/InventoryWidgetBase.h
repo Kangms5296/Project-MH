@@ -53,4 +53,7 @@ public:
 	int CurrentMoney;
 	void AddMoney(int Count);
 	void SubMoney(int Count);
+
+	bool AddCount(int Index, int Count);
+	bool SubCount(int Index, int Count);
 };
