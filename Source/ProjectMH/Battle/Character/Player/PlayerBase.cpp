@@ -547,9 +547,20 @@ void APlayerBase::C2S_SetReload_Implementation(bool newState)
 
 void APlayerBase::Reload()
 {
+	// 재장전할 상황이 아니면 재장전 불가
 	if (GetCharacterMovement()->IsFalling() || Weapon->CurrentWeaponData.WeaponType == EWeaponType::Unknown)
 	{
 		return;
+	}
+
+	// 총알이 없으면 재장전 불가
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC && PC->BattleHUDObject)
+	{
+		if (PC->MainWidgetObject->InventoryObject->GetCount(999) <= 0)
+		{
+			return;
+		}
 	}
 
 	bIsReload = true;
@@ -561,8 +572,17 @@ void APlayerBase::ReloadEnd()
 	ATestPC* PC = Cast<ATestPC>(GetController());
 	if (PC && PC->BattleHUDObject)
 	{
-		Weapon->CurrentWeaponData.Value4 = Weapon->CurrentWeaponData.Value5;
+		// 인벤토리에서 사용 가능한 총알 수 확인
+		int ReloadCount = PC->MainWidgetObject->InventoryObject->GetCount(999);
+		ReloadCount > Weapon->CurrentWeaponData.Value5 - Weapon->CurrentWeaponData.Value4 ? ReloadCount = Weapon->CurrentWeaponData.Value5 - Weapon->CurrentWeaponData.Value4 : ReloadCount;
+		UE_LOG(LogTemp, Warning, TEXT("%d"), ReloadCount);
+
+		// 최대 장전 수를 넘지 않는 값만큼 장전
+		Weapon->CurrentWeaponData.Value4 = Weapon->CurrentWeaponData.Value4 + ReloadCount;
 		PC->BattleHUDObject->SetCount(FString::FromInt(Weapon->CurrentWeaponData.Value4) + " / " + FString::FromInt(Weapon->CurrentWeaponData.Value5));
+
+		// 인벤토리에서 장전한 만큼 총알 아이템 삭제
+		PC->MainWidgetObject->InventoryObject->SubCount(999, ReloadCount);
 	}
 }
 
@@ -628,6 +648,12 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 	case EItemType::Equip:
 	{
+		if (Weapon->UsingSlot)
+		{
+			Weapon->UsingSlot->CurrentItem = Weapon->CurrentWeaponData;
+		}
+		Weapon->UsingSlot = UseSlot;
+
 		switch (ItemData.WeaponType)
 		{
 		case EWeaponType::Gun:

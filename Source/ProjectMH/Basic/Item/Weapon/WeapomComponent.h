@@ -19,4 +19,6 @@ class PROJECTMH_API UWeapomComponent : public USkeletalMeshComponent
 public:
 	UPROPERTY()
 	FItemDataTable CurrentWeaponData;
+
+	class UInventorySlotWidgetBase* UsingSlot;
 };

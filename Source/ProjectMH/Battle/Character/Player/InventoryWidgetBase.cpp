@@ -208,3 +208,16 @@ bool UInventoryWidgetBase::SubCount(int Index, int Count)
 	// 기존에 아이템이 없는 경우
 	return false;
 }
+
+int UInventoryWidgetBase::GetCount(int Index)
+{
+	int SumCount = 0;
+
+	// 현재 가지고 있는 아이템 중 ItemData의 ItemIndex에 해당하는 아이템이 있는지 확인
+	for (int i = 0; i < Slots.Num(); i++)
+		if (Slots[i]->IsUsing && Slots[i]->CurrentItem.ItemIndex == Index)
+			// 수 증감
+			SumCount += Slots[i]->ItemCount;
+
+	return SumCount;
+}
