@@ -23,7 +23,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		FRotator AimRotation = Pawn->GetAimOffset();
 		AimYaw = AimRotation.Yaw;
 		AimPitch = AimRotation.Pitch;
-		/*
+
 		bIsReload = Pawn->bIsReload;
 
 		if (Pawn->ReloadMontage && Pawn->bIsReload)
@@ -33,11 +33,9 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				Pawn->PlayAnimMontage(Pawn->ReloadMontage);
 			}
 		}
-		*/
 	}
 }
 
-/*
 void UPlayerAnimInstance::AnimNotify_ReloadEnd(UAnimNotify* AnimNotify)
 {
 	APlayerBase* Pawn = Cast<APlayerBase>(TryGetPawnOwner());
@@ -47,7 +45,6 @@ void UPlayerAnimInstance::AnimNotify_ReloadEnd(UAnimNotify* AnimNotify)
 		Pawn->bIsReload = false;
 		Pawn->C2S_SetReload(false);
 
-		Pawn->Weapon->CurrentWeaponData.Value4 = Pawn->Weapon->CurrentWeaponData.Value5;
+		Pawn->ReloadEnd();
 	}
 }
-*/

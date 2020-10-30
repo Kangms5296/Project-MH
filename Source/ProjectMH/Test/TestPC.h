@@ -27,6 +27,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
 	class UMainWidgetBase* MainWidgetObject;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "UI")
+	TSubclassOf<class UBattleHUDBase> BattleHUDClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
+	class UBattleHUDBase* BattleHUDObject;
+
 	bool IsShowInventory;
 	void ToggleInventory();
 

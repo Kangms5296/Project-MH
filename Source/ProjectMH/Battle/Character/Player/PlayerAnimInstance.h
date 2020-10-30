@@ -18,35 +18,38 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
-		float Speed;
+	float Speed;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
-		float Direction;
+	float Direction;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		uint64 bIsFire : 1;
+	uint64 bIsFire : 1;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		uint64 bIsSprint : 1;
+	uint64 bIsSprint : 1;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		uint64 bIsIronsight : 1;
+	uint64 bIsIronsight : 1;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		uint64 bIsCrouched : 1;
+	uint64 bIsCrouched : 1;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		uint64 bIsJumping : 1;
+	uint64 bIsJumping : 1;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
-		float bIsReload;
+	float bIsReload;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
-		EWeaponType WeaponType;
+	EWeaponType WeaponType;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
-		float AimYaw;
+	float AimYaw;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Status")
-		float AimPitch;
+	float AimPitch;
+
+	UFUNCTION()
+	void AnimNotify_ReloadEnd(UAnimNotify* AnimNotify);
 };

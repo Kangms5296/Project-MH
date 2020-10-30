@@ -10,6 +10,8 @@
 #include "Engine/GameViewportClient.h"
 #include "../Battle/Character/Player/PlayerCameraManagerBase.h"
 
+#include "../Battle/UI/BattleHUDBase.h"
+
 ATestPC::ATestPC()
 {
 	PlayerCameraManagerClass = APlayerCameraManagerBase::StaticClass();
@@ -25,6 +27,12 @@ void ATestPC::BeginPlay()
 		if (MainWidgetObject)
 		{
 			MainWidgetObject->AddToViewport();
+		}
+
+		BattleHUDObject = CreateWidget<UBattleHUDBase>(this, BattleHUDClass);
+		if (BattleHUDObject)
+		{
+			BattleHUDObject->AddToViewport();
 		}
 	}
 }

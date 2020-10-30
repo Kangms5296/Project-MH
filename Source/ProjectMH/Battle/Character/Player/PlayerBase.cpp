@@ -10,6 +10,7 @@
 #include "InventorySlotWidgetBase.h"
 #include "../../../Basic/Item/Weapon/BulletBase.h"
 #include "../../../Basic/Item/Weapon/DropItemBase.h"
+#include "../../UI/BattleHUDBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -28,7 +29,7 @@
 APlayerBase::APlayerBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
@@ -66,6 +67,32 @@ void APlayerBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bIsSprint)
+	{
+		CurSprintGauge -= DeltaTime * 20;
+		CurSprintGauge = FMath::Clamp(CurSprintGauge, 0.0f, MaxSprintGauge);
+		if (CurSprintGauge <= 0.0f)
+		{
+			StopSprint();
+		}
+
+		ATestPC* PC = Cast<ATestPC>(GetController());
+		if (PC && PC->BattleHUDObject)
+		{
+			PC->BattleHUDObject->SetStamina(CurSprintGauge / MaxSprintGauge);
+		}
+	}
+	else
+	{
+		CurSprintGauge += DeltaTime * 5;
+		CurSprintGauge = FMath::Clamp(CurSprintGauge, 0.0f, MaxSprintGauge);
+
+		ATestPC* PC = Cast<ATestPC>(GetController());
+		if (PC && PC->BattleHUDObject)
+		{
+			PC->BattleHUDObject->SetStamina(CurSprintGauge / MaxSprintGauge);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -107,17 +134,24 @@ float APlayerBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 		return 0.0f;
 	}
 	CurrentHP -= DamageAmount;
+	CurrentHP = FMath::Clamp(CurrentHP, 0.0f, MaxHP);
 	OnRep_CurrentHP();
 
-	CurrentHP = FMath::Clamp(CurrentHP, 0.0f, MaxHP);
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC && PC->BattleHUDObject)
+	{
+		PC->BattleHUDObject->SetHP(CurrentHP / MaxHP);
+	}
+
 	if (CurrentHP <= 0)
 	{
-		// 사망
-
+		// 사망 처리
+		S2A_DeadAction(FMath::RandRange(1, 3));
 	}
 	else
 	{
-		// 피격
+		// 피격 처리
+		S2A_HitAction(FMath::RandRange(1, 4));
 	}
 
 	return CurrentHP;
@@ -287,7 +321,13 @@ void APlayerBase::OnFire()
 			bIsFire = false;
 			return;
 		}
-		--Weapon->CurrentWeaponData.Value4;
+		
+		// 총알 사용
+		--(Weapon->CurrentWeaponData.Value4);
+		if (PC->BattleHUDObject)
+		{
+			PC->BattleHUDObject->SetCount(FString::FromInt(Weapon->CurrentWeaponData.Value4) + " / " + FString::FromInt(Weapon->CurrentWeaponData.Value5));
+		}
 
 		int32 ScreenSizeX;
 		int32 ScreenSizeY;
@@ -516,6 +556,16 @@ void APlayerBase::Reload()
 	C2S_SetReload(true);
 }
 
+void APlayerBase::ReloadEnd()
+{
+	ATestPC* PC = Cast<ATestPC>(GetController());
+	if (PC && PC->BattleHUDObject)
+	{
+		Weapon->CurrentWeaponData.Value4 = Weapon->CurrentWeaponData.Value5;
+		PC->BattleHUDObject->SetCount(FString::FromInt(Weapon->CurrentWeaponData.Value4) + " / " + FString::FromInt(Weapon->CurrentWeaponData.Value5));
+	}
+}
+
 void APlayerBase::AddNearItem(ADropItemBase * AddItem)
 {
 	if (NearItemList.Num() > 0)
@@ -582,7 +632,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 		{
 		case EWeaponType::Gun:
 		{
-			// 사용중인 무기 Slot에 표시
+			// 사용중인 인벤토리 Slot에 표시
 			if (UsingGunSlot != nullptr)
 			{
 				UsingGunSlot->UnDoHighlightSlotBG();
@@ -596,28 +646,63 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 				UsingGunSlot->IsHighlight = true;
 
 				ArmWeapon(ItemData);
+
+				ATestPC* PC = Cast<ATestPC>(GetController());
+				if (PC && PC->BattleHUDObject)
+				{
+					PC->BattleHUDObject->SetCount(FString::FromInt(ItemData.Value4) + " / " + FString::FromInt(ItemData.Value5));
+					PC->BattleHUDObject->ShowWeaponInfo();
+				}
 			}
 			else
 			{
 				UsingGunSlot = nullptr;
 				DisArmWeapon();
+
+				ATestPC* PC = Cast<ATestPC>(GetController());
+				if (PC && PC->BattleHUDObject)
+				{
+					PC->BattleHUDObject->HideWeaponInfo();
+				}
 			}
 		}
 		break;
 
 		case EWeaponType::Sword:
 		{
-			// 사용중인 무기 Slot에 표시
+			// 사용중인 인벤토리 Slot에 표시
 			if (UsingSwordSlot != nullptr)
 			{
 				UsingSwordSlot->UnDoHighlightSlotBG();
 				UsingSwordSlot->IsHighlight = false;
 			}
-			UsingSwordSlot = UseSlot;
-			UsingSwordSlot->DoHighlightSlotBG();
-			UsingSwordSlot->IsHighlight = true;
 
-			ArmWeapon(ItemData);
+			if (UsingSwordSlot != UseSlot)
+			{
+				UsingSwordSlot = UseSlot;
+				UsingSwordSlot->DoHighlightSlotBG();
+				UsingSwordSlot->IsHighlight = true;
+
+				ArmWeapon(ItemData);
+
+				ATestPC* PC = Cast<ATestPC>(GetController());
+				if (PC && PC->BattleHUDObject)
+				{
+					PC->BattleHUDObject->SetCount("00 / 00");
+					PC->BattleHUDObject->ShowWeaponInfo();
+				}
+			}
+			else
+			{
+				UsingSwordSlot = nullptr;
+				DisArmWeapon();
+
+				ATestPC* PC = Cast<ATestPC>(GetController());
+				if (PC && PC->BattleHUDObject)
+				{
+					PC->BattleHUDObject->HideWeaponInfo();
+				}
+			}
 		}
 		break;
 
