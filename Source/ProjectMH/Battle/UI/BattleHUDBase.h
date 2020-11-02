@@ -18,6 +18,9 @@ public:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY()
+	class UScrollBox* T_InfoOutput;
+
+	UPROPERTY()
 	class UProgressBar* HP;
 
 	void SetHP(float NewRatio);
@@ -37,4 +40,7 @@ public:
 
 	void ShowWeaponInfo();
 	void HideWeaponInfo();
+
+	void InitSlot();
+	void PartySetting(const TArray<FString>& PartyArray);
 };
