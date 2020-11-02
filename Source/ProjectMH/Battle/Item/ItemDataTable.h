@@ -62,6 +62,18 @@ public:
 	int Value5;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int Value6;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float fValue1;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float fValue2;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bValue1;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TAssetPtr<class UTexture2D> ItemThumnail;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
