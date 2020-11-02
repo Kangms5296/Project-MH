@@ -122,9 +122,6 @@ public:
 	void S2A_SpawnMuzzleFlashAndSound_Implementation();
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Data")
-	class UParticleSystem* MuzzleFlash;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Data")
 	class USoundBase* WeaponSound;
 
 	UFUNCTION(NetMulticast, Unreliable)
@@ -184,8 +181,11 @@ public:
 	void S2C_InsertItem(FItemDataTable ItemData);
 	void S2C_InsertItem_Implementation(FItemDataTable ItemData);
 
+	UPROPERTY()
 	class UInventorySlotWidgetBase* UsingGunSlot;
+	UPROPERTY()
 	class UInventorySlotWidgetBase* UsingSwordSlot;
+
 	void UseItem(class UInventorySlotWidgetBase* UseSlot, FItemDataTable ItemData);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Data")

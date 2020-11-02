@@ -298,6 +298,7 @@ void APlayerBase::StopAttack()
 
 void APlayerBase::C2S_SetFire_Implementation(bool State)
 {
+
 }
 
 void APlayerBase::StartFire()
@@ -318,10 +319,10 @@ void APlayerBase::OnFire()
 	{
 		if (!bIsFire || GetCharacterMovement()->IsFalling() || bIsReload || Weapon->CurrentWeaponData.Value4 <= 0)
 		{
-			bIsFire = false;
+			StopAttack();
 			return;
 		}
-		
+
 		// 총알 사용
 		--(Weapon->CurrentWeaponData.Value4);
 		if (PC->BattleHUDObject)
@@ -357,22 +358,30 @@ void APlayerBase::OnFire()
 		C2S_ProcessFire(TraceStart, TraceEnd);
 	}
 
-	GetWorldTimerManager().SetTimer(
-		FireTimerHandle,
-		this,
-		&APlayerBase::OnFire,
-		0.12f,
-		false
-	);
+	if (Weapon->CurrentWeaponData.bValue1)
+	{
+		GetWorldTimerManager().SetTimer(
+			FireTimerHandle,
+			this,
+			&APlayerBase::OnFire,
+			Weapon->CurrentWeaponData.fValue1,
+			false
+		);
+	}
+	else
+	{
+		StopAttack();
+	}
 }
 
 void APlayerBase::C2S_ProcessFire_Implementation(FVector TraceStart, FVector TraceEnd)
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> Objects;
 
-	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
+	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel2));
 	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
-	Objects.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
+
 
 	TArray<AActor*> ActorToIgnore;
 	ActorToIgnore.Add(this);
@@ -432,10 +441,10 @@ void APlayerBase::S2A_SpawnMuzzleFlashAndSound_Implementation()
 		);
 	}
 
-	if (MuzzleFlash)
+	if (Weapon->MuzzleFlash)
 	{
 		UGameplayStatics::SpawnEmitterAttached(
-			MuzzleFlash,
+			Weapon->MuzzleFlash,
 			Weapon,
 			TEXT("Muzzle"));
 	}
@@ -557,7 +566,7 @@ void APlayerBase::Reload()
 	ATestPC* PC = Cast<ATestPC>(GetController());
 	if (PC && PC->BattleHUDObject)
 	{
-		if (PC->MainWidgetObject->InventoryObject->GetCount(999) <= 0)
+		if (PC->MainWidgetObject->InventoryObject->GetCount(Weapon->CurrentWeaponData.Value6) <= 0)
 		{
 			return;
 		}
@@ -573,16 +582,15 @@ void APlayerBase::ReloadEnd()
 	if (PC && PC->BattleHUDObject)
 	{
 		// 인벤토리에서 사용 가능한 총알 수 확인
-		int ReloadCount = PC->MainWidgetObject->InventoryObject->GetCount(999);
+		int ReloadCount = PC->MainWidgetObject->InventoryObject->GetCount(Weapon->CurrentWeaponData.Value6);
 		ReloadCount > Weapon->CurrentWeaponData.Value5 - Weapon->CurrentWeaponData.Value4 ? ReloadCount = Weapon->CurrentWeaponData.Value5 - Weapon->CurrentWeaponData.Value4 : ReloadCount;
-		UE_LOG(LogTemp, Warning, TEXT("%d"), ReloadCount);
 
 		// 최대 장전 수를 넘지 않는 값만큼 장전
 		Weapon->CurrentWeaponData.Value4 = Weapon->CurrentWeaponData.Value4 + ReloadCount;
 		PC->BattleHUDObject->SetCount(FString::FromInt(Weapon->CurrentWeaponData.Value4) + " / " + FString::FromInt(Weapon->CurrentWeaponData.Value5));
 
 		// 인벤토리에서 장전한 만큼 총알 아이템 삭제
-		PC->MainWidgetObject->InventoryObject->SubCount(999, ReloadCount);
+		PC->MainWidgetObject->InventoryObject->SubCount(Weapon->CurrentWeaponData.Value6, ReloadCount);
 	}
 }
 
@@ -648,11 +656,11 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 	case EItemType::Equip:
 	{
-		if (Weapon->UsingSlot)
+		// 현재 사용한 무기 정보 슬롯에 저장
+		if (Weapon->IsArmWeapon)
 		{
 			Weapon->UsingSlot->CurrentItem = Weapon->CurrentWeaponData;
 		}
-		Weapon->UsingSlot = UseSlot;
 
 		switch (ItemData.WeaponType)
 		{
@@ -670,6 +678,11 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 				UsingGunSlot = UseSlot;
 				UsingGunSlot->DoHighlightSlotBG();
 				UsingGunSlot->IsHighlight = true;
+				
+				FStreamableManager Loader;
+				UParticleSystem* TempParticle = Loader.LoadSynchronous<UParticleSystem>(ItemData.ItemParticle);
+				Weapon->UsingSlot = UseSlot;
+				Weapon->MuzzleFlash = TempParticle;
 
 				ArmWeapon(ItemData);
 
@@ -683,6 +696,10 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 			else
 			{
 				UsingGunSlot = nullptr;
+
+				Weapon->UsingSlot = nullptr;
+				Weapon->MuzzleFlash = nullptr;
+
 				DisArmWeapon();
 
 				ATestPC* PC = Cast<ATestPC>(GetController());
@@ -761,11 +778,15 @@ void APlayerBase::S2A_SpawnRescueEffect_Implementation()
 
 void APlayerBase::ArmWeapon(FItemDataTable ItemData)
 {
+	Weapon->IsArmWeapon = true;
+
 	C2S_SetWeapon(true, ItemData);
 }
 
 void APlayerBase::DisArmWeapon()
 {
+	Weapon->IsArmWeapon = false;
+
 	FItemDataTable TempData;
 	TempData.WeaponType = EWeaponType::Unknown;
 

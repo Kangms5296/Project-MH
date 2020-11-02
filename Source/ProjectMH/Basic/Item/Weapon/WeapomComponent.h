@@ -17,8 +17,13 @@ class PROJECTMH_API UWeapomComponent : public USkeletalMeshComponent
 	GENERATED_BODY()
 	
 public:
+	bool IsArmWeapon;
+
 	UPROPERTY()
 	FItemDataTable CurrentWeaponData;
 
 	class UInventorySlotWidgetBase* UsingSlot;
+
+	// if weapon is Gun
+	class UParticleSystem* MuzzleFlash;
 };

@@ -81,4 +81,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TAssetPtr<class USkeletalMesh> ItemSkeletalMesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TAssetPtr<class UParticleSystem> ItemParticle;
 };
