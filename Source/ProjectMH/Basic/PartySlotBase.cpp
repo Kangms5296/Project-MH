@@ -14,13 +14,28 @@ void UPartySlotBase::NativeConstruct()
 	//	I_ClassIcon = Cast<UBorder>(GetWidgetFromName(TEXT("I_ClassIcon")));
 	T_UserNN = Cast<UTextBlock>(GetWidgetFromName(TEXT("T_UserNN")));
 	T_UserID = Cast<UTextBlock>(GetWidgetFromName(TEXT("T_UserID")));
+	T_UserReady = Cast<UTextBlock>(GetWidgetFromName(TEXT("T_UserReady")));
 	B_Player = Cast<UButton>(GetWidgetFromName(TEXT("B_Player")));
 }
 
-void UPartySlotBase::SetUserInfo()
+void UPartySlotBase::SetUserID(FString GetUserID)
 {
-	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	T_UserID->SetText(FText::FromString(GetUserID));
+}
 
-	T_UserNN->SetText(FText::FromString(GI->GetUserNN()));
-	T_UserID->SetText(FText::FromString(GI->GetUserID()));
+void UPartySlotBase::SetUserNN(FString GetUserNN)
+{
+	T_UserNN->SetText(FText::FromString(GetUserNN));
+}
+
+void UPartySlotBase::SetUserReady(bool Ready)
+{
+	if (Ready == true)
+	{
+		T_UserReady->SetText(FText::FromString(TEXT("Ready")));
+	}
+	else
+	{
+		T_UserReady->SetText(FText::FromString(TEXT("UnReady")));
+	}
 }

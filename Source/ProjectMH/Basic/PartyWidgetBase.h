@@ -15,36 +15,32 @@ class PROJECTMH_API UPartyWidgetBase : public UUserWidget
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UButton* B_Start;
+	class UButton* B_Start;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UButton* B_Ready;
+	class UButton* B_Ready;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UScrollBox* T_PartyOutput;
+	class UScrollBox* T_PartyOutput;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UTextBlock* ConnectCount;
-
-
-	//½½·Ô
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Slot")
-		TSubclassOf<class UPartySlotBase> PartySlotClass;
-
-	TArray <class UPartySlotBase*> PartySlots;
+	class UTextBlock* ConnectCount;
 
 	virtual void NativeConstruct() override;
 
 	UFUNCTION()
-		void PressStartButton();
+	void PressStartButton();
 
 	UFUNCTION()
-		void PressReadyButton();
+	void PressReadyButton();
 
-	void SetPlayerCount(int NewPlayerCount);
+	void HideStartGameButton();
+	void ShowStartGameButton();
 
-	void AddSlots(int PlayerCount);
+	void InitSlot();
 
+	void Party(const TArray<FString>& PartyArray);
 
-	void SubSlots(int PlayerCount);
+	void Ready(const FString& ID);
+
 };

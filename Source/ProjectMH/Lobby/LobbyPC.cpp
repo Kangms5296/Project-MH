@@ -1,51 +1,49 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "LobbyPC.h"
+#include "LobbyGM.h"
 
 #include "LobbyWidgetBase.h"
 #include "../Basic/PartyWidgetBase.h"
+#include "../MHGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 void ALobbyPC::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (LobbyWidgetClass)
+	if (IsLocalPlayerController())
 	{
-		if (IsLocalPlayerController())
+		if (LobbyWidgetClass)
 		{
-			LobbyWidgetObject = CreateWidget<ULobbyWidgetBase>(this, LobbyWidgetClass);
-			LobbyWidgetObject->AddToViewport();
+			{
+				LobbyWidgetObject = CreateWidget<ULobbyWidgetBase>(this, LobbyWidgetClass);
+				LobbyWidgetObject->AddToViewport();
 
-			bShowMouseCursor = true;
-			SetInputMode(FInputModeGameAndUI());
-			//			SetInputMode(FInputModeUIOnly());
+				bShowMouseCursor = true;
+				SetInputMode(FInputModeGameAndUI());
+			}
 		}
-	}
 
-	if (PartyWidgetClass)
-	{
-
-		if (IsLocalPlayerController())
+		if (PartyWidgetClass)
 		{
 			PartyWidgetObject = CreateWidget<UPartyWidgetBase>(this, PartyWidgetClass);
 			PartyWidgetObject->AddToViewport();
-			PartyWidgetObject->SetPlayerCount(1);
-			PartyWidgetObject->AddSlots(1);
 			HideParty();
+
+			UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			Server_Party(GI->GetUserID());
 		}
 	}
 }
 
 void ALobbyPC::C2S_SendMessage_Implementation(const FText & Message)
 {
-	//c++ 11
 	for (auto Iter = GetWorld()->GetPlayerControllerIterator(); Iter; Iter++)
 	{
 		ALobbyPC* PC = Cast<ALobbyPC>(*Iter);
 		if (PC)
 		{
-			//Server to Client
 			PC->S2C_SendMessage(Message);
 		}
 	}
@@ -62,25 +60,21 @@ void ALobbyPC::S2C_SendMessage_Implementation(const FText & Message)
 void ALobbyPC::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	UE_LOG(LogClass, Warning, TEXT("SetupInputComponent"));
 	InputComponent->BindAction(TEXT("Party"), IE_Released, this, &ALobbyPC::ToggleParty);
 }
 
 void ALobbyPC::ToggleParty()
 {
-	UE_LOG(LogClass, Warning, TEXT("ToggleParty"));
 	if (PartyWidgetObject)
 	{
 		if (PartyWidgetObject->GetVisibility() == ESlateVisibility::Visible)
 		{
 
 			HideParty();
-			UE_LOG(LogClass, Warning, TEXT("HideParty"));
 		}
 		else
 		{
 			ShowParty();
-			UE_LOG(LogClass, Warning, TEXT("ShowParty"));
 		}
 
 	}
@@ -92,7 +86,6 @@ void ALobbyPC::ShowParty()
 	{
 		PartyWidgetObject->SetVisibility(ESlateVisibility::Visible);
 		bShowMouseCursor = true;
-		//		SetInputMode(FInputModeGameAndUI());
 	}
 }
 
@@ -104,4 +97,58 @@ void ALobbyPC::HideParty()
 	}
 }
 
+void ALobbyPC::ShowStart()
+{
+	if (HasAuthority())
+	{
+		if (PartyWidgetObject)
+		{
+			PartyWidgetObject->ShowStartGameButton();
+		}
+	}
+}
 
+void ALobbyPC::HideStart()
+{
+	if (HasAuthority())
+	{
+		if (PartyWidgetObject)
+		{
+			PartyWidgetObject->HideStartGameButton();
+		}
+	}
+}
+
+void ALobbyPC::Server_Party_Implementation(const FString & PartyID)
+{
+	ALobbyGM* GM = Cast<ALobbyGM>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GM)
+	{
+		GM->GetUser(PartyID);
+	}
+}
+
+void ALobbyPC::Client_PartySet_Implementation(const TArray<FString>& PartySlotsID)
+{
+	if (IsLocalPlayerController() && PartyWidgetObject)
+	{
+		PartyWidgetObject->Party(PartySlotsID);
+	}
+}
+
+void ALobbyPC::Server_Ready_Implementation(const FString & UserID)
+{
+	ALobbyGM* GM = Cast<ALobbyGM>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GM)
+	{
+		GM->GetReady(UserID);
+	}
+}
+
+void ALobbyPC::Client_ReadySet_Implementation(const FString& UserSetID)
+{
+	if (IsLocalPlayerController() && PartyWidgetObject)
+	{
+		PartyWidgetObject->Ready(UserSetID);
+	}
+}

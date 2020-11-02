@@ -18,18 +18,23 @@ public:
 	//	class UBorder* I_ClassIcon;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UTextBlock* T_UserNN;
+	class UTextBlock* T_UserNN;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UTextBlock* T_UserID;
+	class UTextBlock* T_UserID;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class UButton* B_Player;
+	class UTextBlock* T_UserReady;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	class UButton* B_Player;
 
 	virtual void NativeConstruct() override;
 
 	UFUNCTION(BlueprintCallable)
-		void SetUserInfo();
-
+	void SetUserID(FString GetUserID);
+	void SetUserNN(FString GetUserNN);
+	void SetUserReady(bool Ready);
 	bool bUse = false;
+	int Num = 0;
 };

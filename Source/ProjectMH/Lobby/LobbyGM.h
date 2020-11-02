@@ -14,9 +14,11 @@ class PROJECTMH_API ALobbyGM : public AGameModeBase
 {
 	GENERATED_BODY()
 public:
-	virtual void PostLogin(APlayerController* NewPlayer) override;
+	TArray <FString> PartySlots;
 
-	virtual void Logout(AController* Exiting) override;
+	void GetUser(const FString& ID);
 
-	void PlayerCount(bool User);
+	void GetReady(const FString & ID);
+
+	void StartGame();
 };

@@ -32,7 +32,6 @@ void ULobbyWidgetBase::ProcessTextCommited(const FText & Text, ETextCommit::Type
 	{
 		if (Text.CompareToCaseIgnored(FText::GetEmpty())) // 엔터를 눌렀을때 메시지를 아무것도 안적었을경우 (공백일 경우)
 		{
-			//Local PC -> Host PC
 			ALobbyPC* PC = GetOwningPlayer<ALobbyPC>();
 			if (PC)
 			{

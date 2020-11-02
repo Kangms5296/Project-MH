@@ -4,12 +4,13 @@
 #include "PartyWidgetBase.h"
 #include "Components/ScrollBox.h"		//PartyOutput
 #include "Components/Button.h"			//start,Ready Button
-#include "Components/ScrollBox.h"		//PartyOutput
 #include "PartySlotBase.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextBlock.h"
 #include "../MHGameInstance.h"
+#include "../Lobby/LobbyGM.h"
+#include "../Lobby/LobbyPC.h"
 
 void UPartyWidgetBase::NativeConstruct()
 {
@@ -28,87 +29,149 @@ void UPartyWidgetBase::NativeConstruct()
 	}
 
 	T_PartyOutput = Cast<UScrollBox>(GetWidgetFromName(TEXT("T_PartyOutput")));
-
-	ConnectCount = Cast<UTextBlock>(GetWidgetFromName(TEXT("ConnectCount")));
 }
 
 void UPartyWidgetBase::PressStartButton()
 {
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("UnReady")))
+			{
+				return;
+			}
+		}
+	}
 
+	int MaxCount = 0;
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			if (PartySlot->GetVisibility() == ESlateVisibility::Visible)
+			{
+				++MaxCount;
+			}
+		}
+	}
+	for (int i = 0; i < MaxCount; ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (GI)
+			{
+				GI->SetMaxPartyNum(MaxCount);
+			}
+		}
+	}
+
+	ALobbyGM* GM = Cast<ALobbyGM>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GM) //Server Only
+	{
+		GM->StartGame();
+	}
 }
 
 void UPartyWidgetBase::PressReadyButton()
 {
-
-}
-
-void UPartyWidgetBase::SetPlayerCount(int NewPlayerCount)
-{
-
-
-	FString Temp = FString::Printf(TEXT("%d"), NewPlayerCount);
-	if (ConnectCount)
+	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	ALobbyPC* PC = Cast<ALobbyPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC && GI)
 	{
-		ConnectCount->SetText(FText::FromString(Temp));
+		PC->Server_Ready(GI->GetUserID());
 	}
-
-
 }
-/*
-for (int Row = 0; Row < Rows; ++Row)
-		{
-			for (int Col = 0; Col < Cols; ++Col)
-			{
-				// Slot 생성.
-				UInventorySlotWidgetBase* CurSlot = CreateWidget<UInventorySlotWidgetBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0), InventorySlotWidgetClass);
-				CurSlot->SlotIndex = Row * Cols + Col;
-				CurSlot->RowIndex = Row;
-				CurSlot->ColIndex = Col;
-				CurSlot->SetOwnerWidget(this);
-				Slots.Add(CurSlot);
 
-				// Slot 화면에 표시.
-				UUniformGridSlot* GridSlot = UGP_SlotManageGrid->AddChildToUniformGrid(CurSlot, Row, Col);
-				GridSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Fill);
-				GridSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
-
-				// 저장 데이터 파싱.
-				// ..
-			}
-		}
-
-*/
-void UPartyWidgetBase::AddSlots(int PlayerCount)
+void UPartyWidgetBase::HideStartGameButton()
 {
-	/*
-	UTextBlock* NewTextBlock = NewObject<UTextBlock>(T_ChatOutput);
-	class UPartyWidgetBase* PartyWidgetObject;
-
-	TSubclassOf<class UPartySlotBase> PartySlotClass;
-	*/
-	if (T_PartyOutput)
+	if (B_Start)
 	{
-		UPartySlotBase* NewPartySlot = CreateWidget<UPartySlotBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0), PartySlotClass);
+		B_Start->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
 
-		NewPartySlot->SetUserInfo();
-		//		UPartySlotBase* NewPartySlot = NewObject<UPartySlotBase>(T_PartyOutput);
-		//		if (NewPartySlot)
+void UPartyWidgetBase::ShowStartGameButton()
+{
+	if (B_Start)
+	{
+		B_Start->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UPartyWidgetBase::InitSlot()
+{
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
 		{
-			PartySlots.Add(NewPartySlot);
-			//NewPartySlot->SetUserInfo();
-//			T_PartyOutput->AddChild(NewPartySlot);
-			for (int i = 0; i < PartySlots.Num(); i++)
-			{
-				T_PartyOutput->AddChild(PartySlots[i]);
-			}
-			T_PartyOutput->ScrollToEnd();
-			UE_LOG(LogClass, Warning, TEXT("Add Player End"));
+			PartySlot->bUse = false;
+			PartySlot->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 }
 
-void UPartyWidgetBase::SubSlots(int PlayerCount)
-{
 
+void UPartyWidgetBase::Party(const TArray<FString>& PartyArray)
+{
+	InitSlot();
+	UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	for (int i = 0; i < PartyArray.Num(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		PartySlot->bUse = true;
+		PartySlot->Num = i;
+		GI->SetPartyNum(PartySlot->Num);
+		PartySlot->SetUserID(PartyArray[i]);
+		//		PartySlot->SetUserID(FString::FromInt(PartySlot->Num));
+		PartySlot->SetVisibility(ESlateVisibility::Visible);
+		PartySlot->SetUserReady(false);
+		B_Start->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
+void UPartyWidgetBase::Ready(const FString & ID)
+{
+	ALobbyPC* PC = Cast<ALobbyPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+
+	if (B_Start->GetVisibility() == ESlateVisibility::Visible)
+	{
+		PC->HideStart();
+	}
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			if (PartySlot->T_UserID->GetText().ToString() == ID)
+			{
+				if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("UnReady")))
+				{
+					PartySlot->SetUserReady(true);
+				}
+				else if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("Ready")))
+				{
+					PartySlot->SetUserReady(false);
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("UnReady")))
+			{
+				return;
+			}
+		}
+	}
+	PC->ShowStart();
+}

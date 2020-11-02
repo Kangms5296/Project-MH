@@ -3,40 +3,38 @@
 
 #include "LobbyGM.h"
 #include "LobbyGS.h"
+#include "LobbyPC.h"
+#include "../MHGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
-void ALobbyGM::PostLogin(APlayerController * NewPlayer)
+
+void ALobbyGM::GetUser(const FString & ID)
 {
-	Super::PostLogin(NewPlayer);
-	UE_LOG(LogClass, Warning, TEXT("PostLogin"));
-	PlayerCount(true);
-}
-
-void ALobbyGM::Logout(AController * Exiting)
-{
-	PlayerCount(false);
-
-	Super::Logout(Exiting);
-}
-
-void ALobbyGM::PlayerCount(bool user)
-{
-	ALobbyGS* GS = GetGameState<ALobbyGS>();
-	if (GS)
+	PartySlots.Emplace(ID);
+	PartySlots.Sort();
+	for (auto Iter = GetWorld()->GetPlayerControllerIterator(); Iter; ++Iter)
 	{
-		//		GS->PlayerCount++;
-		if (user)
+		ALobbyPC* PC = Cast<ALobbyPC>(*Iter);
+		if (PC)
 		{
-			UE_LOG(LogClass, Warning, TEXT("Login Player1"));
-			GS->PlayerCount++;
-			GS->OnRep_PlayerCount(); //Host Only
-			GS->AddPlayer();
-			UE_LOG(LogClass, Warning, TEXT("Login Player2"));
-		}
-		else if (!user)
-		{
-			GS->PlayerCount--;
-			GS->OnRep_PlayerCount(); //Host Only
-//			GS->RemovePlayer();
+			PC->Client_PartySet(PartySlots);
 		}
 	}
+}
+
+void ALobbyGM::GetReady(const FString & ID)
+{
+	for (auto Iter = GetWorld()->GetPlayerControllerIterator(); Iter; ++Iter)
+	{
+		ALobbyPC* PC = Cast<ALobbyPC>(*Iter);
+		if (PC)
+		{
+			PC->Client_ReadySet(ID);
+		}
+	}
+}
+
+void ALobbyGM::StartGame()
+{
+	GetWorld()->ServerTravel(TEXT("BattleLevel"));
 }
