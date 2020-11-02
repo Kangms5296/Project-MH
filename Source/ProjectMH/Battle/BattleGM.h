@@ -13,5 +13,9 @@ UCLASS()
 class PROJECTMH_API ABattleGM : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+public:
+	TArray <FString> PartySlotInfo;
+	TArray <int> PartySequence;
+
+	void GetUserInfo(const FString& ID, int PartyNum, int MaxPartyNum);
 };
