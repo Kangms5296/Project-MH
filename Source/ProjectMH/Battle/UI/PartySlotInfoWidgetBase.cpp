@@ -22,5 +22,5 @@ void UPartySlotInfoWidgetBase::SetUserInfoID(FString GetUserID)
 
 void UPartySlotInfoWidgetBase::SetUserInfoHP(float GetUserHP)
 {
-	P_UserInfoHP->SetPercent(GetUserHP / 100);
+	P_UserInfoHP->SetPercent(GetUserHP);
 }

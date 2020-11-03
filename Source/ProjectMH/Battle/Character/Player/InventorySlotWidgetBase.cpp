@@ -5,7 +5,8 @@
 #include "MainWidgetBase.h"
 #include "PlayerBase.h"
 #include "InventoryWidgetBase.h"
-#include "../../../Test/TestPC.h"
+#include "../../BattlePC.h"
+//#include "../../../Test/TestPC.h"
 #include "SlotWidgetDD.h"
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
@@ -56,7 +57,7 @@ FReply UInventorySlotWidgetBase::NativeOnMouseMove(const FGeometry & InGeometry,
 	FEventReply Reply;
 	Reply.NativeReply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 
-	ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	ABattlePC* PC = Cast<ABattlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (PC && IsUsing)
 	{
 		PC->ShowTooltip(CurrentItem.ItemName, CurrentItem.ItemDesc);
@@ -75,7 +76,7 @@ void UInventorySlotWidgetBase::NativeOnMouseLeave(const FPointerEvent & InMouseE
 	}
 	else
 	{
-		ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		ABattlePC* PC = Cast<ABattlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 		if (PC && IsUsing)
 		{
 			PC->HideTooltip();
@@ -248,7 +249,7 @@ bool UInventorySlotWidgetBase::SubCount(int SubCount)
 	{
 		ResetSlot();
 
-		ATestPC* PC = Cast<ATestPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		ABattlePC* PC = Cast<ABattlePC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 		if (PC)
 		{
 			PC->HideTooltip();

@@ -102,3 +102,49 @@ void UBattleHUDBase::PartySetting(const TArray<FString>& PartyArray)
 		}
 	}
 }
+
+//이함수 들어오면 터짐
+void UBattleHUDBase::UIHP(float TempHP, const FString & ID)
+{
+	for (int i = 0; i < T_InfoOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotInfoWidgetBase* PartySlotInfo = Cast<UPartySlotInfoWidgetBase>(T_InfoOutput->GetChildAt(i));
+		if (PartySlotInfo)
+		{
+			if (PartySlotInfo->T_UserInfoID->GetText().ToString() == ID)
+			{
+				PartySlotInfo->SetUserInfoHP(TempHP);
+			}
+		}
+	}
+}
+
+/*
+void UPartyWidgetBase::Ready(const FString & ID)
+{
+	ALobbyPC* PC = Cast<ALobbyPC>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+
+	if (B_Start->GetVisibility() == ESlateVisibility::Visible)
+	{
+		PC->HideStart();
+	}
+	for (int i = 0; i < T_PartyOutput->GetChildrenCount(); ++i)
+	{
+		UPartySlotBase* PartySlot = Cast<UPartySlotBase>(T_PartyOutput->GetChildAt(i));
+		if (PartySlot)
+		{
+			if (PartySlot->T_UserID->GetText().ToString() == ID)
+			{
+				if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("UnReady")))
+				{
+					PartySlot->SetUserReady(true);
+				}
+				else if (PartySlot->T_UserReady->GetText().ToString() == FString(TEXT("Ready")))
+				{
+					PartySlot->SetUserReady(false);
+				}
+			}
+		}
+	}
+}
+*/

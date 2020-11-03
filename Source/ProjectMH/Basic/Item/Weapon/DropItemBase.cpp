@@ -12,7 +12,8 @@
 #include "Engine/StreamableManager.h"
 #include "Net/UnrealNetwork.h"
 
-#include "../../../Test/TestGM.h"
+#include "../../../Battle/BattleGM.h"
+//#include "../../../Test/TestGM.h"
 
 // Sets default values
 ADropItemBase::ADropItemBase()

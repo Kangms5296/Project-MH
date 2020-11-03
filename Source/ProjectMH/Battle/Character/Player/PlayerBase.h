@@ -209,4 +209,12 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void S2A_SetWeapon(bool NewState, FItemDataTable NewData);
 	void S2A_SetWeapon_Implementation(bool NewState, FItemDataTable NewData);
+
+	UFUNCTION(Server, Reliable)
+	void C2S_UiSame(float TempHP, const FString& ID);
+	void C2S_UiSame_Implementation(float TempHP, const FString& ID);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void S2A_UiSame(float TempHP, const FString& ID);
+	void S2A_UiSame_Implementation(float TempHP, const FString& ID);
 };

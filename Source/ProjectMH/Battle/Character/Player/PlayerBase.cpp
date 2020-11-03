@@ -4,7 +4,7 @@
 #include "PlayerBase.h"
 #include "../../../Basic/Item/Weapon/WeapomComponent.h"
 #include "../../BattlePC.h"
-#include "../../../Test/TestPC.h"
+//#include "../../../Test/TestPC.h"
 #include "MainWidgetBase.h"
 #include "InventoryWidgetBase.h"
 #include "InventorySlotWidgetBase.h"
@@ -24,6 +24,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Net/UnrealNetwork.h"
+
+#include "../../UI/BattleHUDBase.h"
+#include "../../UI/PartySlotInfoWidgetBase.h"
+#include "../../../MHGameInstance.h"
 
 // Sets default values
 APlayerBase::APlayerBase()
@@ -76,7 +80,7 @@ void APlayerBase::Tick(float DeltaTime)
 			StopSprint();
 		}
 
-		ATestPC* PC = Cast<ATestPC>(GetController());
+		ABattlePC* PC = Cast<ABattlePC>(GetController());
 		if (PC && PC->BattleHUDObject)
 		{
 			PC->BattleHUDObject->SetStamina(CurSprintGauge / MaxSprintGauge);
@@ -87,7 +91,7 @@ void APlayerBase::Tick(float DeltaTime)
 		CurSprintGauge += DeltaTime * 5;
 		CurSprintGauge = FMath::Clamp(CurSprintGauge, 0.0f, MaxSprintGauge);
 
-		ATestPC* PC = Cast<ATestPC>(GetController());
+		ABattlePC* PC = Cast<ABattlePC>(GetController());
 		if (PC && PC->BattleHUDObject)
 		{
 			PC->BattleHUDObject->SetStamina(CurSprintGauge / MaxSprintGauge);
@@ -137,16 +141,18 @@ float APlayerBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 	CurrentHP = FMath::Clamp(CurrentHP, 0.0f, MaxHP);
 	OnRep_CurrentHP();
 
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC && PC->BattleHUDObject)
 	{
 		PC->BattleHUDObject->SetHP(CurrentHP / MaxHP);
+		//내 컨트롤러가 아닐때 모든애들의 UI에 내아이디를 넘겨줌
 	}
 
 	if (CurrentHP <= 0)
 	{
 		// 사망 처리
 		S2A_DeadAction(FMath::RandRange(1, 3));
+		UE_LOG(LogClass, Warning, TEXT("GameOver"));
 	}
 	else
 	{
@@ -171,17 +177,24 @@ void APlayerBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 void APlayerBase::OnRep_CurrentHP()
 {
 	AController* PC = GetController();
-	if (PC && PC->IsLocalController())
+//	if (PC && PC->IsLocalController())
+	if(PC)
 	{
 		// Main UI HP Bar 반영
-		ATestPC* TPC = Cast<ATestPC>(PC);
+		ABattlePC* TPC = Cast<ABattlePC>(PC);
 		if (TPC && TPC->MainWidgetObject)
 		{
-
+			TPC->BattleHUDObject->SetHP(CurrentHP / 100);
 		}
 
 		// 파티창 HP Bar에 반영
-
+			///////////////////모든애들한테 보이게 작업해야됨
+			UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+			//밑에 함수 들어가면 터짐
+//			TPC->BattleHUDObject->UIHP(CurrentHP / MaxHP, GI->GetUserID());//이함수 들어가면 터짐
+//			UE_LOG(LogClass, Warning, TEXT("%f,%s"), CurrentHP/MaxHP, *GI->GetUserID());
+//			C2S_UiSame(CurrentHP / MaxHP, GI->GetUserID());
+//			C2S_UiSame,S2A_UiSame 함수 사용하여 UI 동기화 하다가 끝남
 
 	}
 }
@@ -314,7 +327,7 @@ void APlayerBase::StartFire()
 
 void APlayerBase::OnFire()
 {
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC)
 	{
 		if (!bIsFire || GetCharacterMovement()->IsFalling() || bIsReload || Weapon->CurrentWeaponData.Value4 <= 0)
@@ -518,7 +531,7 @@ void APlayerBase::StartIronsight()
 	if (GetCharacterMovement()->IsFalling() || Weapon->CurrentWeaponData.WeaponType != EWeaponType::Gun)
 		return;
 
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC)
 	{
 		PC->MainWidgetObject->ShowCrosshair();
@@ -530,7 +543,7 @@ void APlayerBase::StartIronsight()
 
 void APlayerBase::StopIronsight()
 {
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC)
 	{
 		PC->MainWidgetObject->HideCrosshair();
@@ -563,7 +576,7 @@ void APlayerBase::Reload()
 	}
 
 	// 총알이 없으면 재장전 불가
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC && PC->BattleHUDObject)
 	{
 		if (PC->MainWidgetObject->InventoryObject->GetCount(Weapon->CurrentWeaponData.Value6) <= 0)
@@ -578,7 +591,7 @@ void APlayerBase::Reload()
 
 void APlayerBase::ReloadEnd()
 {
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC && PC->BattleHUDObject)
 	{
 		// 인벤토리에서 사용 가능한 총알 수 확인
@@ -635,7 +648,7 @@ void APlayerBase::C2S_CheckPickupItem_Implementation(ADropItemBase * NearItem)
 
 void APlayerBase::S2C_InsertItem_Implementation(FItemDataTable ItemData)
 {
-	ATestPC* PC = Cast<ATestPC>(GetController());
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
 	if (PC && PC->IsLocalController())
 	{
 		PC->MainWidgetObject->InventoryObject->AddItem(ItemData, ItemData.Value1);
@@ -686,7 +699,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 				ArmWeapon(ItemData);
 
-				ATestPC* PC = Cast<ATestPC>(GetController());
+				ABattlePC* PC = Cast<ABattlePC>(GetController());
 				if (PC && PC->BattleHUDObject)
 				{
 					PC->BattleHUDObject->SetCount(FString::FromInt(ItemData.Value4) + " / " + FString::FromInt(ItemData.Value5));
@@ -702,7 +715,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 				DisArmWeapon();
 
-				ATestPC* PC = Cast<ATestPC>(GetController());
+				ABattlePC* PC = Cast<ABattlePC>(GetController());
 				if (PC && PC->BattleHUDObject)
 				{
 					PC->BattleHUDObject->HideWeaponInfo();
@@ -728,7 +741,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 
 				ArmWeapon(ItemData);
 
-				ATestPC* PC = Cast<ATestPC>(GetController());
+				ABattlePC* PC = Cast<ABattlePC>(GetController());
 				if (PC && PC->BattleHUDObject)
 				{
 					PC->BattleHUDObject->SetCount("00 / 00");
@@ -740,7 +753,7 @@ void APlayerBase::UseItem(UInventorySlotWidgetBase* UseSlot, FItemDataTable Item
 				UsingSwordSlot = nullptr;
 				DisArmWeapon();
 
-				ATestPC* PC = Cast<ATestPC>(GetController());
+				ABattlePC* PC = Cast<ABattlePC>(GetController());
 				if (PC && PC->BattleHUDObject)
 				{
 					PC->BattleHUDObject->HideWeaponInfo();
@@ -818,4 +831,15 @@ void APlayerBase::S2A_SetWeapon_Implementation(bool NewState, FItemDataTable New
 		// 애니메이션 스테이트 머신 변경
 		Weapon->CurrentWeaponData = NewData;
 	}
+}
+
+void APlayerBase::C2S_UiSame_Implementation(float TempHP, const FString & ID)
+{
+	S2A_UiSame(TempHP, ID);
+}
+
+void APlayerBase::S2A_UiSame_Implementation(float TempHP, const FString & ID)
+{
+	ABattlePC* PC = Cast<ABattlePC>(GetController());
+	PC->BattleHUDObject->UIHP(TempHP, ID);
 }

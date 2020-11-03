@@ -43,4 +43,5 @@ public:
 
 	void InitSlot();
 	void PartySetting(const TArray<FString>& PartyArray);
+	void UIHP(float TempHP, const FString& ID);
 };

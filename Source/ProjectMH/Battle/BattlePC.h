@@ -14,7 +14,16 @@ class PROJECTMH_API ABattlePC : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	ABattlePC();
+
 	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "UI")
+	TSubclassOf<class UMainWidgetBase> MainWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
+	class UMainWidgetBase* MainWidgetObject;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "UI")
 	TSubclassOf<class UBattleHUDBase> BattleHUDClass;
@@ -29,4 +38,13 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_PartyInfoSet(const TArray<FString>& PartySlotsID);
 	void Client_PartyInfoSet_Implementation(const TArray<FString>& PartySlotsID);
+
+	bool IsShowInventory;
+	void ToggleInventory();
+
+	bool IsShowTooltip;
+	void ShowTooltip(FString ItemName, FString ItemDesc);
+	void HideTooltip();
+
+	void TestDamage();
 };
