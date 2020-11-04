@@ -27,7 +27,7 @@ void ATitlePC::BeginPlay()
 
 void ATitlePC::StartServer()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("LobbyLevel"), true, TEXT("listen"));
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("FinalLobby"), true, TEXT("listen"));
 }
 
 void ATitlePC::ConnectServer(FString ServerIPAddress)

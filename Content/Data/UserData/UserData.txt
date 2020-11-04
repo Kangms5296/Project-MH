@@ -39,6 +39,11 @@
 			"UserID": "6",
 			"UserPW": "6",
 			"UserNN": "6"
+		},
+		{
+			"UserID": "Master",
+			"UserPW": "123",
+			"UserNN": "Master1"
 		}
 	]
 }

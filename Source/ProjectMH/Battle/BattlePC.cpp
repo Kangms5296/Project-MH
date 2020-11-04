@@ -24,6 +24,9 @@ void ABattlePC::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bShowMouseCursor = false;
+	SetInputMode(FInputModeGameOnly());
+
 	if (IsLocalPlayerController())
 	{
 		MainWidgetObject = CreateWidget<UMainWidgetBase>(this, MainWidgetClass);
@@ -36,9 +39,6 @@ void ABattlePC::BeginPlay()
 		if (BattleHUDClass)
 		{
 			BattleHUDObject->AddToViewport();
-
-			bShowMouseCursor = true;
-			SetInputMode(FInputModeGameAndUI());
 
 			UMHGameInstance* GI = Cast<UMHGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 			Server_PartyInfo(GI->GetUserID(), GI->GetPartyNum(), GI->GetMaxPartyNum());

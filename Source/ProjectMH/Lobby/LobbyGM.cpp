@@ -36,5 +36,5 @@ void ALobbyGM::GetReady(const FString & ID)
 
 void ALobbyGM::StartGame()
 {
-	GetWorld()->ServerTravel(TEXT("BattleLevel"));
+	GetWorld()->ServerTravel(TEXT("FinalBattle"));
 }
